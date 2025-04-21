@@ -213,6 +213,11 @@ module.exports = {
         return apiFramework.pipeline(require('./incoming-recommendations'), localUtils);
     },
 
+    //custom added
+    get socialBookmarks() {
+        return apiFramework.pipeline(require('./social-bookmarks'), localUtils);
+    },
+
     /**
      * Content API Controllers
      *
@@ -264,4 +269,5 @@ module.exports = {
     get recommendationsPublic() {
         return apiFramework.pipeline(require('./recommendations-public'), localUtils, 'content');
     }
+
 };

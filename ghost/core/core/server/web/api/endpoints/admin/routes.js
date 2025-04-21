@@ -3,6 +3,7 @@ const api = require('../../../../api').endpoints;
 const {http} = require('@tryghost/api-framework');
 const apiMw = require('../../middleware');
 const mw = require('./middleware');
+const customApi = require('./custom-routes');
 
 const shared = require('../../../shared');
 
@@ -358,6 +359,9 @@ module.exports = function apiRoutes() {
 
     // Incoming recommendations
     router.get('/incoming_recommendations', mw.authAdminApi, http(api.incomingRecommendations.browse));
+
+    // Add custom api routes
+    customApi(router);
 
     return router;
 };

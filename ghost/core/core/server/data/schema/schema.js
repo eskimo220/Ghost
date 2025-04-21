@@ -126,7 +126,7 @@ module.exports = {
         email: {type: 'string', maxlength: 191, nullable: false, unique: true, validations: {isEmail: true}},
         profile_image: {type: 'string', maxlength: 2000, nullable: true},
         cover_image: {type: 'string', maxlength: 2000, nullable: true},
-        bio: {type: 'text', maxlength: 65535, nullable: true, validations: {isLength: {max: 200}}},
+        bio: {type: 'text', maxlength: 65535, nullable: true, validations: {isLength: {max: 5000}}},
         website: {type: 'string', maxlength: 2000, nullable: true, validations: {isEmptyOrURL: true}},
         location: {type: 'text', maxlength: 65535, nullable: true, validations: {isLength: {max: 150}}},
         facebook: {type: 'string', maxlength: 2000, nullable: true},
@@ -1112,5 +1112,47 @@ module.exports = {
         recommendation_id: {type: 'string', maxlength: 24, nullable: false, references: 'recommendations.id', unique: false, cascadeDelete: true},
         member_id: {type: 'string', maxlength: 24, nullable: true, references: 'members.id', unique: false, setNullDelete: true},
         created_at: {type: 'dateTime', nullable: false}
+    },
+
+    //202504 add custom social tables begin
+    social_bookmarks: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
+        created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false},
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['user_id', 'post_id']
+        ]    
+    },    
+    social_follows: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        follower_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        followed_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false},
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['follower_id', 'followed_id']
+        ]    
+    },
+    social_favors: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
+        type: {type: 'string', maxlength: 24, nullable: false, defaultTo: 'like'},
+        created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false},
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['user_id', 'post_id']
+        ]    
+    },
+    social_forwards: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
+        platform: {type: 'string', maxlength: 32, nullable: true},
+        created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false}
     }
+    // 202504 add custom social tables end
 };

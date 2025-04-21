@@ -136,9 +136,12 @@ module.exports = {
     add(apiConfig, frame) {
         debug('validate add');
 
+        debug(JSON.stringify(apiConfig));
+        debug(JSON.stringify(frame));
+
         // NOTE: this block should be removed completely once JSON Schema validations
         //       are introduced for all of the endpoints
-        if (!['posts', 'tags'].includes(apiConfig.docName)) {
+        if (!['posts', 'tags', 'socialbookmarks', 'socialfavors', 'socialfollows', 'socialforwards'].includes(apiConfig.docName)) {
             if (_.isEmpty(frame.data) || _.isEmpty(frame.data[apiConfig.docName]) || _.isEmpty(frame.data[apiConfig.docName][0])) {
                 return Promise.reject(new BadRequestError({
                     message: tpl(messages.noRootKeyProvided, {docName: apiConfig.docName})
