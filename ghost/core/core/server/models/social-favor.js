@@ -4,12 +4,13 @@ const errors = require('@tryghost/errors');
 const models = require('./index');
 const logging = require('@tryghost/logging');
 
-const SocialBookmark = ghostBookshelf.Model.extend({
-    tableName: 'social_bookmarks',
+const SocialFavor = ghostBookshelf.Model.extend({
+    tableName: 'social_favors',
 
     defaults() {
         return {
-            id: ObjectId().toHexString()
+            id: ObjectId().toHexString(),
+            type: 'favor'
         };
     },
 
@@ -55,11 +56,11 @@ const SocialBookmark = ghostBookshelf.Model.extend({
 
         const postAuthorId = post.related('authors').find(author => author.id === userId);
         if (postAuthorId) {
-            throw new errors.ValidationError({message: `Users cannot bookmark their own posts.`});
+            throw new errors.ValidationError({message: `Users cannot favor their own posts.`});
         }
     }
 });
 
 module.exports = {
-    SocialBookmark: ghostBookshelf.model('SocialBookmark', SocialBookmark)
+    SocialFavor: ghostBookshelf.model('SocialFavor', SocialFavor)
 };

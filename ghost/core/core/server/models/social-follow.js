@@ -4,8 +4,8 @@ const errors = require('@tryghost/errors');
 const models = require('./index');
 const logging = require('@tryghost/logging');
 
-const SocialBookmark = ghostBookshelf.Model.extend({
-    tableName: 'social_bookmarks',
+const SocialFollow = ghostBookshelf.Model.extend({
+    tableName: 'social_follows',
 
     defaults() {
         return {
@@ -17,8 +17,8 @@ const SocialBookmark = ghostBookshelf.Model.extend({
         return this.belongsTo('User', 'user_id');
     },
 
-    post() {
-        return this.belongsTo('Post', 'post_id');
+    followedUser() {
+        return this.belongsTo('User', 'followed_id');
     },
 
     initialize() {
@@ -30,21 +30,15 @@ const SocialBookmark = ghostBookshelf.Model.extend({
     async validateFields(model) {
         logging.info(JSON.stringify(model));
 
-        const postId = model.get('post_id');
         const userId = model.get('user_id');
+        const followedId = model.get('followed_id');
 
-        if (!postId) {
-            throw new errors.ValidationError({message: '`post_id` is required.'});
-        }
- 
         if (!userId) {
             throw new errors.ValidationError({message: '`user_id` is required.'});
         }
-
-        // @ts-ignore
-        const post = await models.Post.findOne({id: postId}, {withRelated: ['authors']});
-        if (!post) {
-            throw new errors.NotFoundError({message: `Post with ID ${postId} not found.`});
+ 
+        if (!followedId) {
+            throw new errors.ValidationError({message: '`followed_id` is required.'});
         }
 
         // @ts-ignore
@@ -53,13 +47,17 @@ const SocialBookmark = ghostBookshelf.Model.extend({
             throw new errors.NotFoundError({message: `User with ID ${userId} not found.`});
         }
 
-        const postAuthorId = post.related('authors').find(author => author.id === userId);
-        if (postAuthorId) {
-            throw new errors.ValidationError({message: `Users cannot bookmark their own posts.`});
+        // @ts-ignore
+        const followed = await models.User.findOne({id: followedId});
+        if (!followed) {
+            throw new errors.NotFoundError({message: `User with ID ${followedId} not found.`});
         }
+
+        //set unique couple id
+        model.set('follow_couple', userId.concat(followedId));
     }
 });
 
 module.exports = {
-    SocialBookmark: ghostBookshelf.model('SocialBookmark', SocialBookmark)
+    SocialFollow: ghostBookshelf.model('SocialFollow', SocialFollow)
 };
