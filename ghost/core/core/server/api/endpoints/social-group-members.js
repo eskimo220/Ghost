@@ -5,16 +5,16 @@ const models = require('../../models');
 // @ts-ignore
 //const api = require('./index');
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.updated_by', 'post.tags', 'user'];
+const ALLOWED_INCLUDES = ['group', 'user', 'role'];
 
 const messages = {
-    notFound: 'Bookmark not found.',
-    duplicateEntry: 'Bookmark already exists for this post and user.'
+    notFound: 'group member not found.',
+    duplicateEntry: 'group member already exists for this group and user.'
 };
 
 /** @type {import('@tryghost/api-framework').Controller} */
 const controller = {
-    docName: 'socialbookmarks',
+    docName: 'socialgroupmembers',
 
     browse: {
         headers: {
@@ -37,7 +37,7 @@ const controller = {
         permissions: true,
         query(frame) {  
             // @ts-ignore
-            return models.SocialBookmark.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
+            return models.SocialGroupMember.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
         }
 
     },
@@ -49,7 +49,7 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
+            return models.SocialGroupMember.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
                 .then((entry) => {
                     if (!entry) {
                         return Promise.reject(new errors.NotFoundError({
@@ -65,17 +65,43 @@ const controller = {
         statusCode: 201,
         headers: {cacheInvalidate: false},
         options: ['include'],
-        data: ['post_id'],
+        data: ['group_id', 'user_id', 'status'],
         permissions: true,
         async query(frame) {
             try {
                 // @ts-ignore
-                return await models.SocialBookmark.add(frame.data.socialbookmarks[0], frame.options);
+                return await models.SocialGroupMember.add(frame.data.socialgroupmembers[0], frame.options);
             } catch (err) {
                 logging.error(err);
                 if (err.code === 'ER_DUP_ENTRY') {
                     throw new errors.InternalServerError({
-                        message: tpl(messages.duplicateEntry, frame.data.socialbookmarks)
+                        message: tpl(messages.duplicateEntry, frame.data.socialgroupmembers)
+                    });
+                }
+                throw err;
+            }
+        }
+    }, 
+
+    edit: {
+        statusCode: 200,
+        headers: {cacheInvalidate: false},
+        options: [
+            'include',
+            'id',
+            'transacting'
+        ],
+        data: ['group_id', 'user_id', 'status'],
+        permissions: true,
+        async query(frame) {
+            try {
+                // @ts-ignore
+                return await models.SocialGroupMember.edit(frame.data.socialgroupmembers[0], frame.options);
+            } catch (err) {
+                logging.error(err);
+                if (err.code === 'ER_DUP_ENTRY') {
+                    throw new errors.InternalServerError({
+                        message: tpl(messages.duplicateEntry, frame.data.socialgroupmembers)
                     });
                 }
                 throw err;
@@ -90,7 +116,7 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.destroy({...frame.options, require: true});
+            return models.SocialGroupMember.destroy({...frame.options, require: true});
         }
     }
 };

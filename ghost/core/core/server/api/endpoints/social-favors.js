@@ -8,13 +8,13 @@ const logging = require('@tryghost/logging');
 const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.updated_by', 'post.tags', 'user'];
 
 const messages = {
-    notFound: 'Bookmark not found.',
-    duplicateEntry: 'Bookmark already exists for this post and user.'
+    notFound: 'favor not found.',
+    duplicateEntry: 'favor already exists for this post receiver and user.'
 };
 
 /** @type {import('@tryghost/api-framework').Controller} */
 const controller = {
-    docName: 'socialbookmarks',
+    docName: 'socialfavors',
 
     browse: {
         headers: {
@@ -37,7 +37,7 @@ const controller = {
         permissions: true,
         query(frame) {  
             // @ts-ignore
-            return models.SocialBookmark.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
+            return models.SocialFavor.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
         }
 
     },
@@ -49,7 +49,7 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
+            return models.SocialFavor.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
                 .then((entry) => {
                     if (!entry) {
                         return Promise.reject(new errors.NotFoundError({
@@ -65,23 +65,23 @@ const controller = {
         statusCode: 201,
         headers: {cacheInvalidate: false},
         options: ['include'],
-        data: ['post_id'],
+        data: ['post_id', 'user_id'],
         permissions: true,
         async query(frame) {
             try {
                 // @ts-ignore
-                return await models.SocialBookmark.add(frame.data.socialbookmarks[0], frame.options);
+                return await models.SocialFavor.add(frame.data.socialfavors[0], frame.options);
             } catch (err) {
                 logging.error(err);
                 if (err.code === 'ER_DUP_ENTRY') {
                     throw new errors.InternalServerError({
-                        message: tpl(messages.duplicateEntry, frame.data.socialbookmarks)
+                        message: tpl(messages.duplicateEntry, frame.data.socialfavors)
                     });
                 }
                 throw err;
             }
         }
-    },
+    }, 
 
     destroy: {
         statusCode: 204,
@@ -90,7 +90,7 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.destroy({...frame.options, require: true});
+            return models.SocialFavor.destroy({...frame.options, require: true});
         }
     }
 };

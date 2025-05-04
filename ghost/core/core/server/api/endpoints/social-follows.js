@@ -5,16 +5,16 @@ const models = require('../../models');
 // @ts-ignore
 //const api = require('./index');
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.updated_by', 'post.tags', 'user'];
+const ALLOWED_INCLUDES = ['user', 'followedUser'];
 
 const messages = {
-    notFound: 'Bookmark not found.',
-    duplicateEntry: 'Bookmark already exists for this post and user.'
+    notFound: 'follow not found.',
+    duplicateEntry: 'Already followed this user.'
 };
 
 /** @type {import('@tryghost/api-framework').Controller} */
 const controller = {
-    docName: 'socialbookmarks',
+    docName: 'socialfollows',
 
     browse: {
         headers: {
@@ -37,9 +37,8 @@ const controller = {
         permissions: true,
         query(frame) {  
             // @ts-ignore
-            return models.SocialBookmark.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
+            return models.SocialFollow.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
         }
-
     },
 
     read: {
@@ -49,7 +48,7 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
+            return models.SocialFollow.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
                 .then((entry) => {
                     if (!entry) {
                         return Promise.reject(new errors.NotFoundError({
@@ -65,23 +64,23 @@ const controller = {
         statusCode: 201,
         headers: {cacheInvalidate: false},
         options: ['include'],
-        data: ['post_id'],
+        data: ['followed_id', 'user_id'],
         permissions: true,
         async query(frame) {
             try {
                 // @ts-ignore
-                return await models.SocialBookmark.add(frame.data.socialbookmarks[0], frame.options);
+                return await models.SocialFollow.add(frame.data.socialfollows[0], frame.options);
             } catch (err) {
                 logging.error(err);
                 if (err.code === 'ER_DUP_ENTRY') {
                     throw new errors.InternalServerError({
-                        message: tpl(messages.duplicateEntry, frame.data.socialbookmarks)
+                        message: tpl(messages.duplicateEntry, frame.data.socialfollows)
                     });
                 }
                 throw err;
             }
         }
-    },
+    }, 
 
     destroy: {
         statusCode: 204,
@@ -90,9 +89,10 @@ const controller = {
         permissions: true,
         query(frame) {
             // @ts-ignore
-            return models.SocialBookmark.destroy({...frame.options, require: true});
+            return models.SocialFollow.destroy({...frame.options, require: true});
         }
     }
 };
 
 module.exports = controller;
+
