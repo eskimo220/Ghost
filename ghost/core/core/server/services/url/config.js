@@ -37,7 +37,8 @@ module.exports = [
                 'show_title_and_feature_image',
                 'email_recipient_filter',
                 'comment_id',
-                'tiers'
+                'tiers',
+                'group_id'
             ],
             withRelated: ['tags', 'authors'],
             withRelatedPrimary: {
@@ -90,7 +91,8 @@ module.exports = [
                 'show_title_and_feature_image',
                 'email_recipient_filter',
                 'comment_id',
-                'tiers'
+                'tiers',
+                'group_id'
             ],
             filter: 'status:published+type:page'
         },
