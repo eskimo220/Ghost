@@ -93,8 +93,10 @@ module.exports = {
         canonical_url: {type: 'text', maxlength: 2000, nullable: true},
         newsletter_id: {type: 'string', maxlength: 24, nullable: true, references: 'newsletters.id'},
         show_title_and_feature_image: {type: 'boolean', nullable: false, defaultTo: true},
+        group_id: {type: 'string', maxlength: 24, nullable: true, references: 'social_groups.id', cascadeDelete: true},
         '@@INDEXES@@': [
-            ['type','status','updated_at']
+            ['type','status','updated_at'],
+            ['group_id','status','updated_at']
         ],
         '@@UNIQUE_CONSTRAINTS@@': [
             ['slug', 'type']
@@ -1117,28 +1119,26 @@ module.exports = {
     //202504 add custom social tables begin
     social_bookmarks: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
-        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
-        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true,references: 'posts.id', cascadeDelete: true},
         created_at: {type: 'dateTime', nullable: false},
         created_by: {type: 'string', maxlength: 24, nullable: false},
         '@@UNIQUE_CONSTRAINTS@@': [
             ['user_id', 'post_id']
         ]    
-    },    
+    },        
     social_follows: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
-        follower_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
-        followed_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        followed_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        follow_couple: {type: 'string', maxlength: 48, nullable: false, unique: true, index: true},
         created_at: {type: 'dateTime', nullable: false},
-        created_by: {type: 'string', maxlength: 24, nullable: false},
-        '@@UNIQUE_CONSTRAINTS@@': [
-            ['follower_id', 'followed_id']
-        ]    
+        created_by: {type: 'string', maxlength: 24, nullable: false}
     },
     social_favors: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
-        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
-        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'posts.id', cascadeDelete: true},
         type: {type: 'string', maxlength: 24, nullable: false, defaultTo: 'like'},
         created_at: {type: 'dateTime', nullable: false},
         created_by: {type: 'string', maxlength: 24, nullable: false},
@@ -1148,11 +1148,75 @@ module.exports = {
     },
     social_forwards: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
-        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
-        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'posts.id', cascadeDelete: true},
-        platform: {type: 'string', maxlength: 32, nullable: true},
+        sender_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        receiver_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'posts.id', cascadeDelete: true},
         created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false},
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['sender_id', 'receiver_id', 'post_id']
+        ]    
+    },
+    social_groups: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        creator_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        group_name: {type: 'string', maxlength: 240, nullable: false, unique: true, index: true},
+        type: {type: 'string', maxlength: 60, nullable: false, default: 'family', index: true, 
+            validations: {
+                isIn: [[
+                    'family',
+                    'company',
+                    'private',
+                    'public',
+                    'secret'
+                ]]
+            }}, /// e.g., public, private, secret, family, company
+        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true,
+            validations: {
+                isIn: [[
+                    'approval',
+                    'active',
+                    'archived'
+                ]]
+            }}, /// e.g., waitapproval active, archived
+        max_members: {type: 'integer', nullable: false, unsigned: true, defaultTo: 100}, // ← new    
+        require_approval: {type: 'boolean', nullable: true, defaultTo: false}, // ← new
+        optional_settings: {type: 'json', nullable: true, defaultTo: {}}, // ← new
+        approved_at: {type: 'dateTime', nullable: true},
+        approved_by: {type: 'string', maxlength: 24, nullable: true},
+        description: {type: 'text', nullable: true},
+        created_at: {type: 'dateTime', nullable: false},
+        updated_at: {type: 'dateTime', nullable: false},
         created_by: {type: 'string', maxlength: 24, nullable: false}
+    },    
+    social_group_members: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        group_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'social_groups.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
+        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true, validations: {isIn: [['active', 'archived', 'disabled']]}},
+        role_id: {type: 'string', maxlength: 24, nullable: false, index: true, references: 'roles.id', cascadeDelete: true},
+        created_at: {type: 'dateTime', nullable: false},
+        created_by: {type: 'string', maxlength: 24, nullable: false},    
+        updated_at: {type: 'dateTime', nullable: true},
+        updated_by: {type: 'string', maxlength: 24, nullable: true},        
+        '@@UNIQUE_CONSTRAINTS@@': [
+            ['group_id', 'user_id']
+        ]    
+    },
+    social_post_comments: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'posts.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'users.id', setNullDelete: true},
+        parent_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_comments.id', cascadeDelete: true},
+        in_reply_to_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_comments.id', setNullDelete: true},
+        status: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'published', validations: {isIn: [['published', 'hidden', 'deleted']]}},
+        html: {type: 'text', maxlength: 1000000000, fieldtype: 'long', nullable: true},
+        edited_at: {type: 'dateTime', nullable: true},
+        created_at: {type: 'dateTime', nullable: false},
+        updated_at: {type: 'dateTime', nullable: false},
+        '@@INDEXES@@': [
+            ['post_id', 'status']
+        ]
     }
     // 202504 add custom social tables end
 };

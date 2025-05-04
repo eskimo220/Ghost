@@ -2,23 +2,23 @@ const {combineTransactionalMigrations, addPermissionWithRoles} = require('../../
 
 module.exports = combineTransactionalMigrations(
     addPermissionWithRoles({
-        name: 'Browse Bookmarks',
+        name: 'Browse SocialFavors',
         action: 'browse',
-        object: 'socialbookmark'
+        object: 'socialfavor'
     }, ['Administrator', 'Editor', 'Author']),
     addPermissionWithRoles({
-        name: 'Read Bookmarks',
+        name: 'Read SocialFavors',
         action: 'read',
-        object: 'socialbookmark'
+        object: 'socialfavor'
     }, ['Administrator', 'Editor', 'Author']),
     addPermissionWithRoles({
-        name: 'Add Bookmarks',
+        name: 'Add SocialFavors',
         action: 'add',
-        object: 'socialbookmark'
+        object: 'socialfavor'
     }, ['Administrator', 'Editor', 'Author']),
     addPermissionWithRoles({
-        name: 'Delete Bookmarks',
+        name: 'Delete SocialFavors',
         action: 'destroy',
-        object: 'socialbookmark'
+        object: 'socialfavor'
     }, ['Administrator', 'Editor', 'Author'])
 );
