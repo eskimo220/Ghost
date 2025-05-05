@@ -24,8 +24,14 @@ COPY --chown=node:node ghost/core/core/shared/config/overrides.json /var/lib/gho
 # Install dependencies as node user
 RUN set -eux; \
     cd ${GHOST_INSTALL}/current && \
-	gosu node yarn install --production
-    
+	gosu node yarn --production && \
+    # clean up the cache
+    rm -rf ${GHOST_CONTENT}/adapters/storage/s3/node_modules; \
+	gosu node yarn cache clean; \
+	gosu node npm cache clean --force; \
+	npm cache clean --force; \
+	rm -rv /tmp/yarn*;
+
 # Set permissions
 RUN chown -R node:node /var/lib/ghost/content
 
