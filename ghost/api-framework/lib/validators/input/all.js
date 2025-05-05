@@ -141,7 +141,7 @@ module.exports = {
 
         // NOTE: this block should be removed completely once JSON Schema validations
         //       are introduced for all of the endpoints
-        if (!['posts', 'tags', 'socialbookmarks', 'socialfavors', 'socialfollows', 'socialforwards'].includes(apiConfig.docName)) {
+        if (!['posts', 'tags', 'social'].includes(apiConfig.docName)) {
             if (_.isEmpty(frame.data) || _.isEmpty(frame.data[apiConfig.docName]) || _.isEmpty(frame.data[apiConfig.docName][0])) {
                 return Promise.reject(new BadRequestError({
                     message: tpl(messages.noRootKeyProvided, {docName: apiConfig.docName})
@@ -199,7 +199,7 @@ module.exports = {
         //       are introduced for all of the endpoints. `id` property is currently
         //       stripped from the request body and only the one provided in `options`
         //       is used in later logic
-        if (!['posts', 'tags'].includes(apiConfig.docName)) {
+        if (!['posts', 'tags', 'social'].includes(apiConfig.docName)) {
             if (frame.options.id && frame.data[apiConfig.docName][0].id
                 && frame.options.id !== frame.data[apiConfig.docName][0].id) {
                 return Promise.reject(new BadRequestError({
