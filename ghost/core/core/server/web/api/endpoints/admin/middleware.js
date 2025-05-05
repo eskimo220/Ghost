@@ -3,7 +3,6 @@ const tpl = require('@tryghost/tpl');
 const auth = require('../../../../services/auth');
 const shared = require('../../../shared');
 const apiMw = require('../../middleware');
-const socialBookmark = require('../../../../models/social-bookmark');
 
 const messages = {
     notImplemented: 'The server does not support the functionality required to fulfill the request.'
@@ -50,7 +49,6 @@ const notImplemented = function notImplemented(req, res, next) {
         db: ['POST'],
         settings: ['GET'],
         oembed: ['GET'],
-        //custom added endpoints
         social: ['GET', 'POST', 'DELETE', 'PUT']
     };
 

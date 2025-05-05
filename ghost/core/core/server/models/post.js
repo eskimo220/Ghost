@@ -22,9 +22,7 @@ const {PostRevisions} = require('@tryghost/post-revisions');
 const {mobiledocToLexical} = require('@tryghost/kg-converters');
 const labs = require('../../shared/labs');
 const {setIsRoles} = require('./role-utils');
-const logging = require('@tryghost/logging');
 const models = require('./index');
-const { count } = require('console');
 
 const messages = {
     isAlreadyPublished: 'Your post is already published, please reload your page.',
@@ -249,7 +247,6 @@ Post = ghostBookshelf.Model.extend({
      */
     permittedAttributes: function permittedAttributes() {
         let filteredKeys = ghostBookshelf.Model.prototype.permittedAttributes.apply(this, arguments);
-        logging.debug('permittedAttributes', JSON.stringify(filteredKeys));
 
         this.relationships.forEach((key) => {
             filteredKeys.push(key);

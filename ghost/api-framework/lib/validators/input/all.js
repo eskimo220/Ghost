@@ -135,9 +135,9 @@ module.exports = {
      */
     add(apiConfig, frame) {
         debug('validate add');
-
-        debug(JSON.stringify(apiConfig));
-        debug(JSON.stringify(frame));
+        
+        debug('apiConfig: ', JSON.stringify(apiConfig));
+        debug('frame: ', JSON.stringify(frame));
 
         // NOTE: this block should be removed completely once JSON Schema validations
         //       are introduced for all of the endpoints
