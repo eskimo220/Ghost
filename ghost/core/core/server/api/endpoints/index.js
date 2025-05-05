@@ -213,6 +213,33 @@ module.exports = {
         return apiFramework.pipeline(require('./incoming-recommendations'), localUtils);
     },
 
+    //custom begin
+    get socialBookmarks() {
+        return apiFramework.pipeline(require('./social-bookmarks'), localUtils);
+    },
+
+    get socialForwards() {
+        return apiFramework.pipeline(require('./social-forwards'), localUtils);
+    },
+
+    get socialFollows() {
+        return apiFramework.pipeline(require('./social-follows'), localUtils);
+    },
+
+    get socialFavors() {
+        return apiFramework.pipeline(require('./social-favors'), localUtils);
+    },
+
+    get socialGroups() {
+        return apiFramework.pipeline(require('./social-groups'), localUtils);
+    },
+
+    get socialGroupMembers() {
+        return apiFramework.pipeline(require('./social-group-members'), localUtils);
+    },
+
+    //custom end
+
     /**
      * Content API Controllers
      *
@@ -264,4 +291,5 @@ module.exports = {
     get recommendationsPublic() {
         return apiFramework.pipeline(require('./recommendations-public'), localUtils, 'content');
     }
+
 };

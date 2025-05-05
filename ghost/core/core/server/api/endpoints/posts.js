@@ -16,7 +16,11 @@ const allowedIncludes = [
     'count.positive_feedback',
     'count.negative_feedback',
     'post_revisions',
-    'post_revisions.author'
+    'post_revisions.author',
+    'count.groups',
+    'count.bookmarks',
+    'count.favors',
+    'count.forwards'
 ];
 const unsafeAttrs = ['status', 'authors', 'visibility'];
 
@@ -41,6 +45,12 @@ function getCacheHeaderFromEventString(event, dto) {
                 `${baseUrl}?member_status=paid`
             ].join(', ')
         };
+    }
+}
+
+function validateGroupId(frame) {
+    if (frame.original.body.posts[0].group_id){
+        frame.data.posts[0].group_id = frame.original.body.posts[0].group_id;
     }
 }
 
@@ -172,6 +182,8 @@ const controller = {
             unsafeAttrs: unsafeAttrs
         },
         query(frame) {
+            validateGroupId(frame);
+            // @ts-ignore
             return models.Post.add(frame.data.posts[0], frame.options)
                 .then((model) => {
                     if (model.get('status') === 'published') {
@@ -219,6 +231,8 @@ const controller = {
             unsafeAttrs: unsafeAttrs
         },
         async query(frame) {
+            validateGroupId(frame);
+            // @ts-ignore
             let model = await postsService.editPost(frame, {
                 eventHandler: (event, dto) => {
                     const cacheInvalidate = getCacheHeaderFromEventString(event, dto);

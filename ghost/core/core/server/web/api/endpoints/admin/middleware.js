@@ -48,7 +48,8 @@ const notImplemented = function notImplemented(req, res, next) {
         media: ['POST'],
         db: ['POST'],
         settings: ['GET'],
-        oembed: ['GET']
+        oembed: ['GET'],
+        social: ['GET', 'POST', 'DELETE', 'PUT']
     };
 
     const match = req.url.match(/^\/(\w+)\/?/);

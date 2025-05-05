@@ -22,6 +22,7 @@ const {PostRevisions} = require('@tryghost/post-revisions');
 const {mobiledocToLexical} = require('@tryghost/kg-converters');
 const labs = require('../../shared/labs');
 const {setIsRoles} = require('./role-utils');
+const models = require('./index');
 
 const messages = {
     isAlreadyPublished: 'Your post is already published, please reload your page.',
@@ -595,7 +596,37 @@ Post = ghostBookshelf.Model.extend({
         });
     },
 
+    /**
+     * Validate group and member if group id specified for post
+     */
+    validateGroupAndMember: async function validateGroupAndMember(model, attr, options) {
+        const groupId = model.get('group_id');
+        if (groupId) {
+            // @ts-ignore
+            const group = await models.SocialGroup.findOne({id: groupId});
+            if (!group) {
+                throw new errors.NotFoundError({message: `Group with ID ${groupId} not found.`});
+            }
+            if (group.get('status') !== 'active'){
+                throw new errors.ValidationError({message: `Group with ID ${groupId} is not active.`});
+            }
+
+            //TODO administrator
+            
+            // @ts-ignore
+            const member = await models.SocialGroupMember.findOne({group_id: groupId, user_id: options.context.user});
+            if (!member) {
+                throw new errors.NotFoundError({message: `Group user with ID ${options.context.user} not found.`});
+            }
+            if (member.get('status') !== 'active'){
+                throw new errors.ValidationError({message: `Group user with ID ${options.context.user} is not active.`});
+            }
+        }
+    },
+
     onSaving: async function onSaving(model, attrs, options) {
+        await this.validateGroupAndMember(model, attrs, options);
+
         options = options || {};
 
         const self = this;
@@ -1167,11 +1198,22 @@ Post = ghostBookshelf.Model.extend({
     },
 
     defaultFilters: function defaultFilters(options) {
-        if (options.context && options.context.internal) {
-            return null;
-        }
+        // if (options.context && options.context.internal) {
+        //     return null;
+        // }
 
-        return options.context && options.context.public ? 'type:post' : 'type:post+status:published';
+        // return options.context && options.context.public ? 'type:post' : 'type:post+status:published';
+
+        let filter = options.context && options.context.internal ?
+            null : options.context && options.context.public ? 
+                'type:post' : 'type:post+status:published';
+        
+        //default filter to get posts not in groups
+        if (!/\bgroup_id:/.test(filter)) {            
+            filter = filter ? `${filter}+(group_id:null)` : '(group_id:null)';
+        }
+           
+        return filter;
     },
 
     /**
@@ -1298,7 +1340,7 @@ Post = ghostBookshelf.Model.extend({
             options.columns
             && _.intersection(_.without(ghostBookshelf.model('PostsMeta').prototype.permittedAttributes(), 'id', 'post_id'), options.columns).length)
         ) {
-            options.withRelated = _.union(['posts_meta'], options.withRelated || []);
+            options.withRelated = _.union(['posts_meta', 'count.groups', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
         }
 
         return options;
@@ -1544,6 +1586,38 @@ Post = ghostBookshelf.Model.extend({
 
     countRelations() {
         return {
+            groups(modelOrCollection) {
+                modelOrCollection.query('columns', 'posts.*', (qb) => {
+                    qb.count('social_groups.id')
+                        .from('social_groups')
+                        .whereRaw('posts.group_id = social_groups.id')
+                        .as('count__groups');
+                });
+            },
+            bookmarks(modelOrCollection) {
+                modelOrCollection.query('columns', 'posts.*', (qb) => {
+                    qb.count('social_bookmarks.id')
+                        .from('social_bookmarks')
+                        .whereRaw('posts.id = social_bookmarks.post_id')
+                        .as('count__bookmarks');
+                });
+            },
+            favors(modelOrCollection) {
+                modelOrCollection.query('columns', 'posts.*', (qb) => {
+                    qb.count('social_favors.id')
+                        .from('social_favors')
+                        .whereRaw('posts.id = social_favors.post_id')
+                        .as('count__favors');
+                });
+            },
+            forwards(modelOrCollection) {
+                modelOrCollection.query('columns', 'posts.*', (qb) => {
+                    qb.count('social_forwards.id')
+                        .from('social_forwards')
+                        .whereRaw('posts.id = social_forwards.post_id')
+                        .as('count__forwards');
+                });
+            },
             signups(modelOrCollection) {
                 modelOrCollection.query('columns', 'posts.*', (qb) => {
                     qb.count('members_created_events.id')

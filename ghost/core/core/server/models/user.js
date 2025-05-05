@@ -436,6 +436,22 @@ User = ghostBookshelf.Model.extend({
                         qb.andWhere('posts.status', '=', 'published');
                     }
                 });
+            },
+            followed(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_follows.id')
+                        .from('social_follows')
+                        .whereRaw('social_follows.followed_id = users.id')
+                        .as('count__followed');
+                });
+            },
+            follow(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_follows.id')
+                        .from('social_follows')
+                        .whereRaw('social_follows.user_id = users.id')
+                        .as('count__follow');
+                });
             }
         };
     },
