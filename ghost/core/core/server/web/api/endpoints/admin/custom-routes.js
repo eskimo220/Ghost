@@ -31,18 +31,18 @@ module.exports = function customApiRoutes(router) {
     router.del('/social/favors/:id', mw.authAdminApi, http(api.socialFavors.destroy));
 
     //social groups
-    router.get('/social/group', mw.authAdminApi, http(api.socialGroups.browse));
-    router.get('/social/group/:id', mw.authAdminApi, http(api.socialGroups.read));
-    router.post('/social/group', mw.authAdminApi, http(api.socialGroups.add));
-    router.put('/social/group/:id', mw.authAdminApi, http(api.socialGroups.edit));
-    router.del('/social/group/:id', mw.authAdminApi, http(api.socialGroups.destroy));
+    router.get('/social/groups', mw.authAdminApi, http(api.socialGroups.browse));
+    router.get('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.read));
+    router.post('/social/groups', mw.authAdminApi, http(api.socialGroups.add));
+    router.put('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.edit));
+    router.del('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.destroy));
 
     //social group members
-    router.get('/social/member', mw.authAdminApi, http(api.socialGroupMembers.browse));
-    router.get('/social/member/:id', mw.authAdminApi, http(api.socialGroupMembers.read));
-    router.post('/social/member', mw.authAdminApi, http(api.socialGroupMembers.add));
-    router.put('/social/member/:id', mw.authAdminApi, http(api.socialGroupMembers.edit));
-    router.del('/social/member/:id', mw.authAdminApi, http(api.socialGroupMembers.destroy));
+    router.get('/social/members', mw.authAdminApi, http(api.socialGroupMembers.browse));
+    router.get('/social/members/:id', mw.authAdminApi, http(api.socialGroupMembers.read));
+    router.post('/social/members', mw.authAdminApi, http(api.socialGroupMembers.add));
+    router.put('/social/members/:id', mw.authAdminApi, http(api.socialGroupMembers.edit));
+    router.del('/social/members/:id', mw.authAdminApi, http(api.socialGroupMembers.destroy));
     
     return router;
 };
