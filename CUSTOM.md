@@ -1,33 +1,33 @@
-# How to add custom API for Ghost
 <!-- TOC -->
 
-- [How to add custom API for Ghost](#how-to-add-custom-api-for-ghost)
-    - [Purpose](#purpose)
-        - [Add table definition into schema.js](#add-table-definition-into-schemajs)
-        - [Run knex migration](#run-knex-migration)
-    - [Create Model core/server/models/](#create-model-coreservermodels)
-    - [Create API Controller core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
-        - [Create API Controller](#create-api-controller)
-        - [Create API Controller /core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
-    - [API Routes core/server/web/api/endpoints/admin/](#api-routes-coreserverwebapiendpointsadmin)
-        - [Append routes and API Controller mapping](#append-routes-and-api-controller-mapping)
-        - [Append Routes to allowlisted](#append-routes-to-allowlisted)
-    - [Other files](#other-files)
-    - [Summary of related files](#summary-of-related-files)
-    - [API Test](#api-test)
-    - [Change table of Ghost post](#change-table-of-ghost-post)
-        - [Add group_id filter to post GET API](#add-group_id-filter-to-post-get-api)
-        - [Add counts of bookmarks, favors, forwards, and posts in group to post GET result](#add-counts-of-bookmarks-favors-forwards-and-posts-in-group-to-post-get-result)
-    - [Add count of follow, followed to user GET result](#add-count-of-follow-followed-to-user-get-result)
-    - [Project build](#project-build)
-    - [Customed Admin API](#customed-admin-api)
-        - [Custom API summary](#custom-api-summary)
-        - [Custom API data structure](#custom-api-data-structure)
-        - [Extend Ghost table](#extend-ghost-table)
-        - [Extend Ghost post API](#extend-ghost-post-api)
-        - [Extend Ghost user API](#extend-ghost-user-api)
+- [Purpose](#purpose)
+    - [Add table definition into schema.js](#add-table-definition-into-schemajs)
+    - [Run knex migration](#run-knex-migration)
+- [Create Model core/server/models/](#create-model-coreservermodels)
+- [Create API Controller core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
+    - [Create API Controller](#create-api-controller)
+    - [Create API Controller /core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
+- [API Routes core/server/web/api/endpoints/admin/](#api-routes-coreserverwebapiendpointsadmin)
+    - [Append routes and API Controller mapping](#append-routes-and-api-controller-mapping)
+    - [Append Routes to allowlisted](#append-routes-to-allowlisted)
+- [Other files](#other-files)
+- [Summary of related files](#summary-of-related-files)
+- [API Test](#api-test)
+- [Change table of Ghost post](#change-table-of-ghost-post)
+    - [Add group_id filter to post GET API](#add-group_id-filter-to-post-get-api)
+    - [Add counts of bookmarks, favors, forwards, and posts in group to post GET result](#add-counts-of-bookmarks-favors-forwards-and-posts-in-group-to-post-get-result)
+- [Add count of follow, followed to user GET result](#add-count-of-follow-followed-to-user-get-result)
+- [Project build](#project-build)
+- [Customed Admin API](#customed-admin-api)
+    - [Custom API summary](#custom-api-summary)
+    - [Custom API data structure](#custom-api-data-structure)
+    - [Extend Ghost table](#extend-ghost-table)
+    - [Extend Ghost post API](#extend-ghost-post-api)
+    - [Extend Ghost user API](#extend-ghost-user-api)
+    - [Extend role data for group](#extend-role-data-for-group)
 
 <!-- /TOC -->
+
 ---
 
 ## Purpose
@@ -748,3 +748,12 @@ Ghost core project is js-based except individual ts, run `yarn` to make sure ref
 | Extend       | filter & count                      |
 |--------------|-------------------------------------|
 | Extend Count | include=count.follow,count.followed |
+
+### Extend role data for group
+
+Add three roles about group.  
+
+- Social Group Owner  
+- Social Group Admin  
+- Social Group Member  
+
