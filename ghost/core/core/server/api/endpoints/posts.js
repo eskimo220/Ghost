@@ -176,7 +176,6 @@ const controller = {
             unsafeAttrs: unsafeAttrs
         },
         query(frame) {
-            validateGroupId(frame);
             // @ts-ignore
             return models.Post.add(frame.data.posts[0], frame.options)
                 .then((model) => {
@@ -206,7 +205,12 @@ const controller = {
             'convert_to_lexical',
             // NOTE: only for internal context
             'forUpdate',
-            'transacting'
+            'transacting',
+            // for Update to hidden status and group_id
+            // hidden is not default search option, so must specify filter on update. 
+            // posts/:id/?filter=status:[oldstatus, 'hidden']+group_id:'my group id' or 
+            // posts/:id/?filter=status:['hidden', newstatus]+group_id:'my group id' 
+            'filter'
         ],
         validation: {
             options: {
@@ -225,7 +229,6 @@ const controller = {
             unsafeAttrs: unsafeAttrs
         },
         async query(frame) {
-            validateGroupId(frame);
             // @ts-ignore
             let model = await postsService.editPost(frame, {
                 eventHandler: (event, dto) => {
