@@ -1,6 +1,6 @@
 const {addTable} = require('../../utils');
 
-//post_group
+//social_post_comments
 module.exports = addTable('social_post_comments', {
     id: {type: 'string', maxlength: 24, nullable: false, primary: true},
     post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'posts.id', cascadeDelete: true},
