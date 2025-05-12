@@ -65,7 +65,7 @@
     "@slack/webhook": "7.0.5",
     "@tryghost/adapter-base-cache": "0.1.12",
     "@tryghost/adapter-cache-redis": "0.0.0",
-    "@tryghost/admin-api-schema": "4.5.5",
+    "@tryghost/admin-api-schema": "file:.yalc/@tryghost/admin-api-schema",
     "@tryghost/api-framework": "0.0.0",
     "@tryghost/bookshelf-plugins": "0.6.25",
     "@tryghost/color-utils": "0.2.2",
@@ -216,7 +216,8 @@
     "superagent-throttle": "1.0.1",
     "tough-cookie": "4.1.4",
     "ua-parser-js": "1.0.40",
-    "xml": "1.0.1"
+    "xml": "1.0.1",
+    "yalc": "^1.0.0-pre.53"
   },
   "optionalDependencies": {
     "@tryghost/html-to-mobiledoc": "3.1.2",
