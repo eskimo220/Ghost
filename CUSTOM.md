@@ -37,6 +37,12 @@
 
 ## Install or update custom packages  
 
+- Custom ghost base version of Ghost 5.115.0
+
+- Node version
+
+`nvm use v20.19.0`
+
 - install `yalc` to reference local package  
 
 `npm i yalc -g` or `yarn global add yalc`
@@ -54,7 +60,10 @@ yalc publish --private
 
 - Clone Ghost customed version  
 
-`clone https://github.com/aidabo/Ghost-SDK.git -b v5.115.1-next`  
+```sh
+clone https://github.com/aidabo/Ghost-SDK.git -b v5.115.1-next
+yalc add @tryghost/admin-api-schema
+```
 
 - Change your `cocnfig.development.json`  
 
