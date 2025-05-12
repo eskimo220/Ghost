@@ -4,9 +4,12 @@ const errors = require('@tryghost/errors');
 const models = require('./index');
 const logging = require('@tryghost/logging');
 
-const SocialGroupMember = ghostBookshelf.Model.extend({
-    tableName: 'social_group_members',
+let SocialGroupMember;
+let SocialGroupMembers;
 
+SocialGroupMember = ghostBookshelf.Model.extend({
+    tableName: 'social_group_members',
+ 
     defaults() {
         return {
             id: ObjectId().toHexString()
@@ -24,7 +27,7 @@ const SocialGroupMember = ghostBookshelf.Model.extend({
     user() {
         return this.belongsTo('User', 'user_id');
     },
-
+    
     initialize() {
         // @ts-ignore
         ghostBookshelf.Model.prototype.initialize.call(this);
@@ -79,7 +82,13 @@ const SocialGroupMember = ghostBookshelf.Model.extend({
     }
 });
 
+SocialGroupMembers = ghostBookshelf.Collection.extend({
+    model: SocialGroupMember
+});
+
 module.exports = {
-    SocialGroupMember: ghostBookshelf.model('SocialGroupMember', SocialGroupMember)
+    SocialGroupMember: ghostBookshelf.model('SocialGroupMember', SocialGroupMember),
+    // @ts-ignore
+    SocialGroupMembers: ghostBookshelf.collection('SocialGroupMembers', SocialGroupMembers)
 };
 

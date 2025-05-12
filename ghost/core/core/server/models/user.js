@@ -323,6 +323,10 @@ User = ghostBookshelf.Model.extend({
         });
     },
 
+    group_members() {
+        return this.hasMany('SocialGroupMembers', 'user_id');
+    },
+
     updateLastSeen: function updateLastSeen() {
         this.set({last_seen: new Date()});
         return this.save();

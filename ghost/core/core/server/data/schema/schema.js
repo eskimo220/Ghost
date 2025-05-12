@@ -61,7 +61,7 @@ module.exports = {
         feature_image: {type: 'string', maxlength: 2000, nullable: true},
         featured: {type: 'boolean', nullable: false, defaultTo: false},
         type: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'post', validations: {isIn: [['post', 'page']]}},
-        status: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'draft', validations: {isIn: [['published', 'draft', 'scheduled', 'sent']]}},
+        status: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'draft', validations: {isIn: [['published', 'draft', 'scheduled', 'sent', 'hidden']]}},
         // NOTE: unused at the moment and reserved for future features
         locale: {type: 'string', maxlength: 6, nullable: true},
         visibility: {
@@ -418,7 +418,7 @@ module.exports = {
         created_at: {type: 'dateTime', nullable: false},
         author_id: {type: 'string', maxlength: 24, nullable: true, references: 'users.id', cascadeDelete: false, constraintName: 'post_revs_author_id_foreign'},
         title: {type: 'string', maxlength: 2000, nullable: true, validations: {isLength: {max: 255}}},
-        post_status: {type: 'string', maxlength: 50, nullable: true, validations: {isIn: [['draft', 'published', 'scheduled', 'sent']]}},
+        post_status: {type: 'string', maxlength: 50, nullable: true, validations: {isIn: [['draft', 'published', 'scheduled', 'sent', 'hidden']]}},
         reason: {type: 'string', maxlength: 50, nullable: true},
         feature_image: {type: 'string', maxlength: 2000, nullable: true},
         feature_image_alt: {type: 'string', maxlength: 191, nullable: true},
@@ -1217,6 +1217,20 @@ module.exports = {
         '@@INDEXES@@': [
             ['post_id', 'status']
         ]
+    },
+    social_post_comment_likes: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        comment_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'social_post_comments.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'users.id', cascadeDelete: true},
+        created_at: {type: 'dateTime', nullable: false},
+        updated_at: {type: 'dateTime', nullable: false}
+    },
+    social_post_comment_reports: {
+        id: {type: 'string', maxlength: 24, nullable: false, primary: true},
+        comment_id: {type: 'string', maxlength: 24, nullable: false, unique: false, references: 'social_post_comments.id', cascadeDelete: true},
+        user_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'users.id', setNullDelete: true},
+        created_at: {type: 'dateTime', nullable: false},
+        updated_at: {type: 'dateTime', nullable: false}
     }
     // 202504 add custom social tables end
 };

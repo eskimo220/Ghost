@@ -1,16 +1,13 @@
 <!-- TOC -->
-<!-- TOC -->
 
-- [Quickstart install](#quickstart-install)
-        - [Contributors & advanced developers](#contributors--advanced-developers)
 - [Ghost sponsors](#ghost-sponsors)
 - [Getting help](#getting-help)
 - [Local source build](#local-source-build)
 - [Build local custom source to docker image](#build-local-custom-source-to-docker-image)
 - [Copyright & license](#copyright--license)
-- [How to add custom API to Ghost](#how-to-add-custom-api-to-ghost)
+- [How to add custom table and related API to Ghost](#how-to-add-custom-table-and-related-api-to-ghost)
 
-<!-- /TOC -->install
+<!-- /TOC -->
 
 If you want to run your own instance of Ghost, in most cases the best way is to use our **CLI tool**
 
