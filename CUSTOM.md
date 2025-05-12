@@ -2,6 +2,7 @@
 <!-- TOC -->
 
 - [How add custom API to Ghost](#how-add-custom-api-to-ghost)
+    - [Install or update custom packages](#install-or-update-custom-packages)
     - [Purpose](#purpose)
         - [Add table definition into schema.js](#add-table-definition-into-schemajs)
         - [Run knex migration](#run-knex-migration)
@@ -33,6 +34,55 @@
 <!-- /TOC -->
 
 ---
+
+## Install or update custom packages  
+
+- install `yalc` to reference local package  
+
+`npm i yalc -g` or `yarn global add yalc`
+
+- Clone GhostSDK custom package  
+
+`clone https://github.com/aidabo/Ghost-SDK.git`  
+
+- Publish `admin-api-schema` as local yalc package  
+
+```sh
+cd GhostSDK/packages/admin-api-schema
+yalc publish --private
+```
+
+- Clone Ghost customed version  
+
+`clone https://github.com/aidabo/Ghost-SDK.git -b v5.115.1-next`  
+
+- Change your `cocnfig.development.json`  
+
+`ghost/core/core/shared/config/env/config.development.json`  
+
+- Install packages and build  
+
+```sh
+cd Ghost
+yarn fix
+yarn build
+```
+
+- Run 
+
+`yarn dev` or `yarn dev:debug`  
+
+---
+
+- Run migration js if updated
+
+Delete from migration files from `migrations` table
+Run `knex-migrator`
+
+```sh
+cd Ghost
+yarn knex-migrator migrate
+```
 
 ## Purpose
 
