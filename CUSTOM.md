@@ -1,30 +1,34 @@
+# How add custom API to Ghost 
 <!-- TOC -->
 
-- [Purpose](#purpose)
-    - [Add table definition into schema.js](#add-table-definition-into-schemajs)
-    - [Run knex migration](#run-knex-migration)
-- [Create Model core/server/models/](#create-model-coreservermodels)
-- [Create API Controller core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
-    - [Create API Controller](#create-api-controller)
-    - [Create API Controller /core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
-- [API Routes core/server/web/api/endpoints/admin/](#api-routes-coreserverwebapiendpointsadmin)
-    - [Append routes and API Controller mapping](#append-routes-and-api-controller-mapping)
-    - [Append Routes to allowlisted](#append-routes-to-allowlisted)
-- [Other files](#other-files)
-- [Summary of related files](#summary-of-related-files)
-- [API Test](#api-test)
-- [Change table of Ghost post](#change-table-of-ghost-post)
-    - [Add group_id filter to post GET API](#add-group_id-filter-to-post-get-api)
-    - [Add counts of bookmarks, favors, forwards, and posts in group to post GET result](#add-counts-of-bookmarks-favors-forwards-and-posts-in-group-to-post-get-result)
-- [Add count of follow, followed to user GET result](#add-count-of-follow-followed-to-user-get-result)
-- [Project build](#project-build)
-- [Customed Admin API](#customed-admin-api)
-    - [Custom API summary](#custom-api-summary)
-    - [Custom API data structure](#custom-api-data-structure)
-    - [Extend Ghost table](#extend-ghost-table)
-    - [Extend Ghost post API](#extend-ghost-post-api)
-    - [Extend Ghost user API](#extend-ghost-user-api)
-    - [Extend role data for group](#extend-role-data-for-group)
+- [How add custom API to Ghost](#how-add-custom-api-to-ghost)
+    - [Purpose](#purpose)
+        - [Add table definition into schema.js](#add-table-definition-into-schemajs)
+        - [Run knex migration](#run-knex-migration)
+    - [Create Model core/server/models/](#create-model-coreservermodels)
+    - [Create API Controller core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
+        - [Create API Controller](#create-api-controller)
+        - [Create API Controller /core/server/api/endpoints](#create-api-controller-coreserverapiendpoints)
+    - [API Routes core/server/web/api/endpoints/admin/](#api-routes-coreserverwebapiendpointsadmin)
+        - [Append routes and API Controller mapping](#append-routes-and-api-controller-mapping)
+        - [Append Routes to allowlisted](#append-routes-to-allowlisted)
+    - [Other files](#other-files)
+    - [Summary of related files](#summary-of-related-files)
+    - [API Test](#api-test)
+    - [Change table of Ghost post](#change-table-of-ghost-post)
+        - [Add group_id filter to post GET API](#add-group_id-filter-to-post-get-api)
+        - [Add counts of bookmarks, favors, forwards, and posts in group to post GET result](#add-counts-of-bookmarks-favors-forwards-and-posts-in-group-to-post-get-result)
+    - [Add count of follow, followed to user GET result](#add-count-of-follow-followed-to-user-get-result)
+    - [Project build](#project-build)
+    - [Customed Admin API](#customed-admin-api)
+        - [Custom API summary](#custom-api-summary)
+        - [Custom API data structure](#custom-api-data-structure)
+        - [Extend Ghost table](#extend-ghost-table)
+        - [Extend GhostSDK/admin-api-schema](#extend-ghostsdkadmin-api-schema)
+        - [Extend Ghost post API](#extend-ghost-post-api)
+        - [Extend Ghost user API](#extend-ghost-user-api)
+        - [Extend role data for group](#extend-role-data-for-group)
+        - [All custom migration files](#all-custom-migration-files)
 
 <!-- /TOC -->
 
@@ -731,23 +735,43 @@ Ghost core project is js-based except individual ts, run `yarn` to make sure ref
 
 ### Extend Ghost table
 
-| Table | column   | definition                                                                                                        |
-|-------|----------|-------------------------------------------------------------------------------------------------------------------|
-| Posts | group_id | `group_id: {type: 'string', maxlength: 24, nullable: true, references: 'social_groups.id', cascadeDelete: true},` |
+| Table           | column      | definition                                                                                                                                   |
+|-----------------|-------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| posts           | group_id    | `group_id: {type: 'string', maxlength: 24, nullable: true, references: 'social_groups.id', cascadeDelete: true},`                            |
+| posts           | status      |  status: {type: 'string', maxlength: 50, nullable: true, validations: {isIn: [['draft', 'published', 'scheduled', 'sent', 'hidden']]}},      |
+| posts_revisions | post_status |  post_status: {type: 'string', maxlength: 50, nullable: true, validations: {isIn: [['draft', 'published', 'scheduled', 'sent', 'hidden']]}}, |
+
+
+### Extend GhostSDK/admin-api-schema
+
+| ファイル      |  | 修正項目                                                                                                                           | 備考          |
+|-----------|--|--------------------------------------------------------------------------------------------------------------------------------|-------------|
+| post.json |  | "status": {<br/>          "type": "string",<br/>          "enum": ["published", "draft", "scheduled", "sent", "hidden"]<br/>}, | hiddenを追加   |
+| post.json |  | "group_id": {<br/>          "type": ["string", "null"],<br/>          "maxLength": 24<br/>},                                   | group_idを追加 |
 
 ### Extend Ghost post API
 
-| Extend              | filter & count                                               |                                                                    |
-|---------------------|--------------------------------------------------------------|--------------------------------------------------------------------|
-| Extend filter       | filter=group_id:my-group-id                                  |                                                                    |
-| Extend Count        | count.bookmarks, count.favors, count.forwards, count.groups  | The count of bookmarks, forwards, forwards and post count in group |
-| Add Post's group_id | "group_id": "6815be9dfc8b03b493c74aa2",                      |
+| Extend count         | Extend Count                                                 | URL                                              | 備考                                                                                   | Role　（TODO)                    |
+|----------------------|--------------------------------------------------------------|--------------------------------------------------|--------------------------------------------------------------------------------------|--------------------------------|
+| GET                  | count.bookmarks, count.favors, count.forwards, count.groups  |                                                  |                                                                                      |                                |
+| Extend group_id      | data                                                         |                                                  |                                                                                      |                                |
+| GET                  |                                                              | posts/?filter=group_id:my-group-id               | 指定グループの記事を取得する                                                                       | Administratorとグループ所属ユーザ        |
+| POST                 | {posts:[{group_id: "6815be9dfc8b03b493c74aa2"}]}             |                                                  |                                                                                      | グループ所属のユーザ（Owner、Admin、Member） |
+| PUT                  | {posts:[{group_id: "6815be9dfc8b03b493c74aa2"}]}             | posts/:id/?filter=group_id:my-group-id           | Defaultはグループ所属するものが取得しないため、<br/>filterを指定して更新後のデータを取得できるようにする                        | Authors                        |
+| Extend hidden status | data                                                         |                                                  |                                                                                      |                                |
+| GET                  | Extend filter status:'hidden'                                | posts/?filter=status:'hidden'                    | グループ記事取得                                                                             | hiddenの指定はAdministratorのみ      |
+| POST                 | ×                                                            |                                                  | 新規記事をHiddenにすることが不可                                                                  | 新規の場合、status=hidden不可          |
+| PUT                  | {posts:[{status: "hidden"}]}                                 | posts/:id/?filter=status:['published', 'hidden'] | 記事をhiddenにする。変更前後のstatusをfilterに指定し、指定順番関係なし。変更前後のstatusがhiddenではない場合、filterの指定不要    | Administrator                  |
+| PUT                  | {posts:[{status: "draft"}]}                                  | posts/:id/?filter=status:['hidden', 'draft']     | 記事をhiddenから別にする。変更前後のstatusをfilterに指定し、指定順番関係なし。変更前後のstatusがhiddenではない場合、filterの指定不要 | Administrator                  |
+
 
 ### Extend Ghost user API
 
-| Extend       | filter & count                      |
-|--------------|-------------------------------------|
-| Extend Count | include=count.follow,count.followed |
+| Extend                     | filter & count                           | URL                                                          | 備考                   | Role |
+|----------------------------|------------------------------------------|--------------------------------------------------------------|----------------------|------|
+| Extend Count               | include=count.follow,count.followed      | users/?include=count.follow,permissions,roles,count.followed | FollowとFollowedの数を取得 |      |
+| Extend Group Member ＆Roles | include=group_members,group_members.role | users/?include=group_members,group_members.role              | ユーザ所属グループとロールを取得     |
+
 
 ### Extend role data for group
 
@@ -757,3 +781,31 @@ Add three roles about group.
 - Social Group Admin  
 - Social Group Member  
 
+### All custom migration files
+
+`ghost/core/core/server/data/migrations/versions/5.115` 
+
+2025-04-01-17-00-00-drop-social-tables.js  
+2025-04-01-18-00-00-add-group-column-to-post.js  
+2025-04-01-18-00-01-add-index-group-to-post.js  
+2025-04-01-20-00-00-add-social-group-admin-role.js  
+2025-04-01-20-00-00-add-social-group-owner-role.js  
+2025-04-01-20-00-01-add-social-group-member-role.js  
+2025-04-01-21-00-00-add-social-follows-table.js  
+2025-04-01-21-00-01-add-social-follows-permissions.js  
+2025-04-01-21-00-02-add-social-bookmarks-table.js  
+2025-04-01-21-00-03-add-social-bookmarks-permissions.js  
+2025-04-01-21-00-04-add-social-favors-table.js  
+2025-04-01-21-00-05-add-social-favors-permissions.js  
+2025-04-01-21-00-06-add-social-forwards-table.js  
+2025-04-01-21-00-07-add-social-forwards-permissions.js  
+2025-04-01-21-00-10-add-social-groups-table.js  
+2025-04-01-21-00-11-add-social-groups-permissions.js  
+2025-04-01-21-00-12-add-social-groups-members-table.js  
+2025-04-01-21-00-13-add-social-groups-members-permissions.js  
+2025-04-01-21-00-17-add-social-post-comments-table.js  
+2025-04-01-21-00-18-add-social-post-comments-permissions.js  
+2025-04-01-21-01-19-add-social-post-comments-like-table.js  
+2025-04-01-21-01-20-add-social-post-comments-like-permissions.js  
+2025-04-01-21-01-21-add-social-post-comments-report-table.js  
+2025-04-01-21-01-22-add-social-post-comments-report-permissions.js  
