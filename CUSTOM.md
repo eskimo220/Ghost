@@ -62,6 +62,7 @@ yalc publish --private
 
 ```sh
 clone https://github.com/aidabo/Ghost-SDK.git -b v5.115.1-next
+cd Ghost/ghost/core
 yalc add @tryghost/admin-api-schema
 ```
 
