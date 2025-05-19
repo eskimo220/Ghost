@@ -1,6 +1,6 @@
 {
   "name": "ghost-admin",
-  "version": "5.116.0",
+  "version": "5.116.2",
   "description": "Ember.js admin client for Ghost",
   "author": "Ghost Foundation",
   "homepage": "http://ghost.org",
@@ -37,7 +37,7 @@
     "@ember/render-modifiers": "2.1.0",
     "@ember/test-helpers": "2.9.6",
     "@ember/test-waiters": "3.1.0",
-    "@embroider/macros": "1.17.1",
+    "@embroider/macros": "1.16.13",
     "@faker-js/faker": "7.6.0",
     "@glimmer/component": "1.1.2",
     "@html-next/vertical-collection": "3.0.0",
@@ -178,7 +178,7 @@
     "i18n-iso-countries": "7.14.0",
     "jose": "4.15.9",
     "path-browserify": "1.0.1",
-    "webpack": "5.98.0"
+    "webpack": "5.99.4"
   },
   "nx": {
     "targets": {

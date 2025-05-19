@@ -6,8 +6,7 @@ import getName from '@src/utils/get-name';
 import getUsername from '@src/utils/get-username';
 import {Actor} from '@src/api/activitypub';
 import {List, LoadingIndicator, NoValueLabel} from '@tryghost/admin-x-design-system';
-import {handleProfileClick, handleProfileClickRR} from '@src/utils/handle-profile-click';
-import {useFeatureFlags} from '@src/lib/feature-flags';
+import {handleProfileClickRR} from '@src/utils/handle-profile-click';
 import {useNavigate} from '@tryghost/admin-x-framework';
 
 type ActorListProps = {
@@ -52,7 +51,6 @@ const ActorList: React.FC<ActorListProps> = ({
         };
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    const {isEnabled} = useFeatureFlags();
     const navigate = useNavigate();
 
     return (
@@ -69,17 +67,13 @@ const ActorList: React.FC<ActorListProps> = ({
                                 <React.Fragment key={actor.id}>
                                     <ActivityItem key={actor.id}
                                         onClick={() => {
-                                            if (isEnabled('ap-routes')) {
-                                                handleProfileClickRR(actor, navigate);
-                                            } else {
-                                                handleProfileClick(actor.handle || actor);
-                                            }
+                                            handleProfileClickRR(actor, navigate);
                                         }}
                                     >
                                         <APAvatar author={actor} />
                                         <div>
                                             <div className='text-gray-600'>
-                                                <span className='mr-1 font-bold text-black'>{getName(actor)}</span>
+                                                <span className='mr-1 font-bold text-black dark:text-white'>{getName(actor)}</span>
                                                 <div className='text-sm'>{actor.handle || getUsername(actor)}</div>
                                             </div>
                                         </div>
