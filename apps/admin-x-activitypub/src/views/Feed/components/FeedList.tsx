@@ -1,17 +1,14 @@
 import FeedInput from './FeedInput';
 import FeedItem from '@src/components/feed/FeedItem';
 import Layout from '@src/components/layout';
-import NewPostModal from './NewPostModal';
-import NiceModal from '@ebay/nice-modal-react';
+import NewNoteModal from '@src/components/modals/NewNoteModal';
 import {Activity} from '@src/api/activitypub';
 import {ActorProperties} from '@tryghost/admin-x-framework/api/activitypub';
 import {Button, LucideIcon, Separator} from '@tryghost/shade';
 import {EmptyViewIcon, EmptyViewIndicator} from '@src/components/global/EmptyViewIndicator';
 import {LoadingIndicator} from '@tryghost/admin-x-design-system';
-import {handleViewContent} from '@src/utils/content-handlers';
 import {isPendingActivity} from '@src/utils/pending-activity';
 import {useEffect, useRef} from 'react';
-import {useFeatureFlags} from '@src/lib/feature-flags';
 import {useNavigate} from '@tryghost/admin-x-framework';
 
 export type FeedListProps = {
@@ -32,7 +29,6 @@ const FeedList:React.FC<FeedListProps> = ({
     isFetchingNextPage
 }) => {
     const navigate = useNavigate();
-    const {isEnabled} = useFeatureFlags();
 
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -94,18 +90,10 @@ const FeedList:React.FC<FeedListProps> = ({
                                                         repostCount={activity.object.repostCount ?? 0}
                                                         type={activity.type}
                                                         onClick={() => {
-                                                            if (isEnabled('ap-routes')) {
-                                                                navigate(`/feed/${encodeURIComponent(activity.id)}`);
-                                                            } else {
-                                                                handleViewContent(activity, false);
-                                                            }
+                                                            navigate(`/feed/${encodeURIComponent(activity.id)}`);
                                                         }}
                                                         onCommentClick={() => {
-                                                            if (isEnabled('ap-routes')) {
-                                                                navigate(`/feed/${encodeURIComponent(activity.id)}?focusReply=true`);
-                                                            } else {
-                                                                handleViewContent(activity, true);
-                                                            }
+                                                            navigate(`/feed/${encodeURIComponent(activity.id)}?focusReply=true`);
                                                         }}
                                                     />
                                                     {index < activities.length - 1 && (
@@ -135,10 +123,12 @@ const FeedList:React.FC<FeedListProps> = ({
                                     <EmptyViewIndicator>
                                         <EmptyViewIcon><LucideIcon.Hash /></EmptyViewIcon>
                                         <div>The Feed is the stream of thoughts and <span className='text-black dark:text-white'>bite-sized updates</span> from people you follow in the Social Web. It&apos;s looking a little empty right now but once the people you follow start posting, their updates will show up here.</div>
-                                        <Button className='text-white dark:text-black' onClick={() => NiceModal.show(NewPostModal)}>
-                                            <LucideIcon.FilePen />
+                                        <NewNoteModal>
+                                            <Button className='text-white dark:text-black'>
+                                                <LucideIcon.FilePen />
                                             Write your first note
-                                        </Button>
+                                            </Button>
+                                        </NewNoteModal>
                                     </EmptyViewIndicator>
                                 </div>
                             </div>

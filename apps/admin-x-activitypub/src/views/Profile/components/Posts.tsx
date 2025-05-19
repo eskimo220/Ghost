@@ -2,9 +2,7 @@ import FeedItem from '@src/components/feed/FeedItem';
 import {Activity} from '@src/api/activitypub';
 import {LoadingIndicator, NoValueLabel} from '@tryghost/admin-x-design-system';
 import {Separator} from '@tryghost/shade';
-import {handleViewContent} from '@src/utils/content-handlers';
 import {useEffect, useRef} from 'react';
-import {useFeatureFlags} from '@src/lib/feature-flags';
 import {useNavigate} from '@tryghost/admin-x-framework';
 
 export type PostsProps = {
@@ -12,7 +10,8 @@ export type PostsProps = {
     isLoading: boolean,
     fetchNextPage: () => void,
     hasNextPage: boolean,
-    isFetchingNextPage: boolean
+    isFetchingNextPage: boolean,
+    noResultsMessage: string
 }
 
 const Posts: React.FC<PostsProps> = ({
@@ -20,7 +19,8 @@ const Posts: React.FC<PostsProps> = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading
+    isLoading,
+    noResultsMessage
 }) => {
     const observerRef = useRef<IntersectionObserver | null>(null);
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -54,14 +54,13 @@ const Posts: React.FC<PostsProps> = ({
         };
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    const {isEnabled} = useFeatureFlags();
     const navigate = useNavigate();
 
     return (
         <>
             {hasNextPage === false && posts.length === 0 && (
                 <NoValueLabel icon='pen'>
-                    You haven&apos;t posted anything yet.
+                    {noResultsMessage}
                 </NoValueLabel>
             )}
             <ul className='mx-auto flex max-w-[640px] flex-col'>
@@ -80,25 +79,17 @@ const Posts: React.FC<PostsProps> = ({
                             repostCount={activity.object.repostCount}
                             type={activity.type}
                             onClick={() => {
-                                if (isEnabled('ap-routes')) {
-                                    if (activity.object.type === 'Note') {
-                                        navigate(`/feed/${encodeURIComponent(activity.object.id)}`);
-                                    } else if (activity.object.type === 'Article') {
-                                        navigate(`/inbox/${encodeURIComponent(activity.object.id)}`);
-                                    }
-                                } else {
-                                    handleViewContent(activity, false);
+                                if (activity.object.type === 'Note') {
+                                    navigate(`/feed/${encodeURIComponent(activity.object.id)}`);
+                                } else if (activity.object.type === 'Article') {
+                                    navigate(`/inbox/${encodeURIComponent(activity.object.id)}`);
                                 }
                             }}
                             onCommentClick={() => {
-                                if (isEnabled('ap-routes')) {
-                                    if (activity.object.type === 'Note') {
-                                        navigate(`/feed/${encodeURIComponent(activity.object.id)}`);
-                                    } else if (activity.object.type === 'Article') {
-                                        navigate(`/inbox/${encodeURIComponent(activity.object.id)}`);
-                                    }
-                                } else {
-                                    handleViewContent(activity, true);
+                                if (activity.object.type === 'Note') {
+                                    navigate(`/feed/${encodeURIComponent(activity.object.id)}`);
+                                } else if (activity.object.type === 'Article') {
+                                    navigate(`/inbox/${encodeURIComponent(activity.object.id)}`);
                                 }
                             }}
                         />
