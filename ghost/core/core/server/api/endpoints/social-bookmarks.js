@@ -5,7 +5,7 @@ const models = require('../../models');
 // @ts-ignore
 //const api = require('./index');
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.updated_by', 'post.tags', 'user'];
+const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.tags', 'user'];
 
 const messages = {
     notFound: 'Bookmark not found.',

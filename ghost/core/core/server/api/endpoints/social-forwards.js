@@ -5,7 +5,7 @@ const models = require('../../models');
 // @ts-ignore
 //const api = require('./index');
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.updated_by', 'post.tags', 'sender', 'receiver'];
+const ALLOWED_INCLUDES = ['post', 'post.authors', 'post.tags', 'sender', 'receiver'];
 
 const messages = {
     notFound: 'forward not found.',

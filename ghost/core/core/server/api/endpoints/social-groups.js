@@ -3,7 +3,7 @@ const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['posts', 'posts.authors', 'posts.updated_by', 'posts.tags', 'owner', 'members', 'members.user', 'members.role'];
+const ALLOWED_INCLUDES = ['posts', 'posts.authors', 'posts.tags', 'owner', 'members', 'members.user', 'members.role'];
 
 const messages = {
     notFound: 'group not found.',
