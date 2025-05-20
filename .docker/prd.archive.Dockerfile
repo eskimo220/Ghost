@@ -47,7 +47,7 @@ RUN set -eux; \
 ENV GHOST_INSTALL /var/lib/ghost
 ENV GHOST_CONTENT /var/lib/ghost/content
 
-ENV GHOST_VERSION 5.115.1
+ENV GHOST_VERSION 5.116.2
 ENV GHOST_ARCH /tmp
 
 RUN set -eux; \
@@ -120,6 +120,12 @@ RUN set -eux; \
 		apk del --no-network $apkDel; \
 	fi; \
 	\
+	# Reinstall
+	cd "$GHOST_INSTALL/current"; \
+	rm -rf node_modules; \
+	gosu node yarn --force; \
+	gosu node yarn build:tsc; \
+	# Clean
 	gosu node yarn cache clean; \
 	gosu node npm cache clean --force; \
 	npm cache clean --force; \
