@@ -456,6 +456,14 @@ User = ghostBookshelf.Model.extend({
                         .whereRaw('social_follows.user_id = users.id')
                         .as('count__follow');
                 });
+            },
+            groups(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.user_id = users.id and social_group_members.status = ?', 'active')
+                        .as('count__groups');
+                });
             }
         };
     },
