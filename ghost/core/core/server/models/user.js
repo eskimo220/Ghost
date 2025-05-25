@@ -464,6 +464,14 @@ User = ghostBookshelf.Model.extend({
                         .whereRaw('social_group_members.user_id = users.id and social_group_members.status = ?', 'active')
                         .as('count__groups');
                 });
+            },
+            inactive_groups(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.user_id = users.id and social_group_members.status <> ?', 'active')
+                        .as('count__inactive_groups');
+                });
             }
         };
     },
@@ -809,7 +817,7 @@ User = ghostBookshelf.Model.extend({
     /**
      * Checks if a user has permission to perform an action on another user
      * 
-     * @param {Object|string|number} userModelOrId - The user model or ID being acted upon
+     * @param {Object|string|number} userModelOrId - The user model or ID being acted upon 
      * @param {'edit'|'destroy'} action - The action being performed:
      *                                     - 'edit': Edit user details, status, or role
      *                                     - 'destroy': Delete a user (Owner cannot be deleted)
