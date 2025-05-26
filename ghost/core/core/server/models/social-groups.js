@@ -117,6 +117,36 @@ const SocialGroup = ghostBookshelf.Model.extend({
 
         return filter;
     }
+},{
+    countRelations() {
+        return {
+            members(modelOrCollection) {
+                modelOrCollection.query('columns', 'social_groups.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.group_id = social_groups.id and social_group_members.status = ?', 'active')
+                        .as('count__members');
+                });
+            },
+            posts(modelOrCollection) {
+                modelOrCollection.query('columns', 'social_groups.*', (qb) => {
+                    qb.count('posts.id')
+                        .from('posts')
+                        .whereRaw('posts.group_id = social_groups.id')
+                        .as('count__posts');
+                });
+            },
+            inactive_members(modelOrCollection) {
+                modelOrCollection.query('columns', 'social_groups.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.group_id = social_groups.id and social_group_members.status <> ?', 'active')
+                        .as('count__inactive_members');
+                });
+            }
+        };
+    }
+
 });
 
 module.exports = {
