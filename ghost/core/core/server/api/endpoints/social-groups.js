@@ -3,7 +3,6 @@ const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
 const logging = require('@tryghost/logging');
-const { count } = require('console');
 const ALLOWED_INCLUDES = ['posts', 'posts.authors', 'posts.tags', 'owner', 'members', 'members.user', 'members.role', 'count.members', 'count.posts', 'count.inactive_members'];
 
 const messages = {
