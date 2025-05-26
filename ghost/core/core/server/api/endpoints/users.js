@@ -8,8 +8,21 @@ const apiMail = require('./index').mail;
 const apiSettings = require('./index').settings;
 const UsersService = require('../../services/Users');
 const userService = new UsersService({dbBackup, models, auth, apiMail, apiSettings});
-const ALLOWED_INCLUDES = ['count.posts', 'permissions', 'roles', 'roles.permissions', 
-    'count.followed', 'count.follow', 'count.groups', 'count.inactive_groups', 'group_members', 'group_members.role', 'group_members.group', 'group_members.group.count.members','group_members.group.count.posts'];
+const ALLOWED_INCLUDES = [
+    'count.posts', 
+    'permissions', 
+    'roles', 
+    'roles.permissions', 
+    'count.followed', 
+    'count.follow', 
+    'count.groups', 
+    'count.inactive_groups', 
+    'group_members', 
+    'group_members.role', 
+    'group_members.group', 
+    'group_members.group.count.members',
+    'group_members.group.count.posts'
+];
 const UNSAFE_ATTRS = ['status', 'roles'];
 
 const messages = {
