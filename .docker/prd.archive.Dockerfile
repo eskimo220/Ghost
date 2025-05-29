@@ -121,10 +121,10 @@ RUN set -eux; \
 	fi; \
 	\
 	# Reinstall
-	cd "$GHOST_INSTALL/current"; \
-	rm -rf node_modules; \
-	gosu node yarn --force; \
-	gosu node yarn build:tsc; \
+	# cd "$GHOST_INSTALL/current"; \
+	# rm -rf node_modules; \
+	# gosu node yarn --force; \
+	# gosu node yarn build:tsc; \
 	# Clean
 	gosu node yarn cache clean; \
 	gosu node npm cache clean --force; \
