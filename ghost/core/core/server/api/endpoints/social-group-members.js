@@ -44,7 +44,10 @@ const controller = {
 
     read: {
         headers: {cacheInvalidate: false},
-        options: ['include'],
+        options: [
+            'filter',
+            'include'
+        ],
         data: ['id'],
         permissions: true,
         query(frame) {
@@ -65,7 +68,11 @@ const controller = {
         statusCode: 201,
         headers: {cacheInvalidate: false},
         options: ['include'],
-        data: ['group_id', 'user_id', 'status'],
+        data: [
+            'group_id', 
+            'user_id', 
+            'status'
+        ],
         permissions: true,
         async query(frame) {
             try {
@@ -87,11 +94,16 @@ const controller = {
         statusCode: 200,
         headers: {cacheInvalidate: false},
         options: [
+            'filter',
             'include',
             'id',
             'transacting'
         ],
-        data: ['group_id', 'user_id', 'status'],
+        data: [
+            'group_id', 
+            'user_id', 
+            'status'
+        ],
         permissions: true,
         async query(frame) {
             try {

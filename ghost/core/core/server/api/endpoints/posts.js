@@ -126,6 +126,7 @@ const controller = {
             cacheInvalidate: false
         },
         options: [
+            'filter',
             'include',
             'fields',
             'formats',
