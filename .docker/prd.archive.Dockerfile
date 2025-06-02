@@ -1,6 +1,6 @@
 # https://docs.ghost.org/faq/node-versions/
 # https://github.com/nodejs/Release (looking for "LTS")
-FROM node:20-alpine3.21
+FROM node:20-alpine3.21 as base
 
 RUN apk add --no-cache \
 # add "bash" for "[["
@@ -123,8 +123,8 @@ RUN set -eux; \
 	# Reinstall
 	cd "$GHOST_INSTALL/current"; \
 	rm -rf node_modules; \
+	rm -f yarn.lock; \
 	gosu node yarn --force; \
-	gosu node yarn build:tsc; \
 	# Clean
 	gosu node yarn cache clean; \
 	gosu node npm cache clean --force; \
