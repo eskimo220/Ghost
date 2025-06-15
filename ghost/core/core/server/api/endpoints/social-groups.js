@@ -1,9 +1,23 @@
 // @ts-ignore
+// @ts-ignore
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
+// @ts-ignore
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['posts', 'posts.authors', 'posts.tags', 'owner', 'members', 'members.user', 'members.role', 'count.members', 'count.posts', 'count.inactive_members'];
+
+const ALLOWED_INCLUDES = [
+    'posts',
+    'posts.authors',
+    'posts.tags',
+    'owner',
+    'members',
+    'members.user',
+    'members.role',
+    'count.members',
+    'count.posts',
+    'count.inactive_members'
+];
 
 const messages = {
     notFound: 'group not found.',
@@ -133,6 +147,18 @@ const controller = {
         query(frame) {
             // @ts-ignore
             return models.SocialGroup.destroy({...frame.options, require: true});
+        }
+    },
+
+    count: {
+        headers: {
+            cacheInvalidate: false
+        },
+        options: ['filter'],
+        permissions: true, // or define a custom permissions handler
+        async query(frame) {
+            // @ts-ignore
+            return models.SocialGroup.getGroupsCount(frame.options);
         }
     }
 };

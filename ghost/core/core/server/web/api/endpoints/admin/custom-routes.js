@@ -33,6 +33,7 @@ module.exports = function customApiRoutes(router) {
     //social groups
     router.get('/social/groups', mw.authAdminApi, http(api.socialGroups.browse));
     router.get('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.read));
+    router.get('/social/groups_count', mw.authAdminApi, http(api.socialGroups.count));
     router.post('/social/groups', mw.authAdminApi, http(api.socialGroups.add));
     router.put('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.edit));
     router.del('/social/groups/:id', mw.authAdminApi, http(api.socialGroups.destroy));

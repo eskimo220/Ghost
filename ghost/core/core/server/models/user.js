@@ -461,7 +461,8 @@ User = ghostBookshelf.Model.extend({
                 modelOrCollection.query('columns', 'users.*', (qb) => {
                     qb.count('social_group_members.id')
                         .from('social_group_members')
-                        .whereRaw('social_group_members.user_id = users.id and social_group_members.status = ?', 'active')
+                        .whereRaw('social_group_members.user_id = users.id')
+                        .andWhere('social_group_members.status', 'active')
                         .as('count__groups');
                 });
             },
@@ -812,6 +813,37 @@ User = ghostBookshelf.Model.extend({
 
             return owner;
         });
+    },
+
+    isOwnerUser: function isOwnerUser(options) {
+        return this.getOwnerUser(options)
+            .then(function (owner) {
+                return owner.get('status') !== 'inactive' && owner.id === options.context?.user;
+            });
+    },
+
+    getAdminUser: function getAdminUser(options) {
+        options = options || {};
+
+        return this.findOne({
+            role: 'Administrator',
+            status: 'all'
+        }, options).then(function (owner) {
+            if (!owner) {
+                return Promise.reject(new errors.NotFoundError({
+                    message: tpl(messages.ownerNotFound)
+                }));
+            }
+
+            return owner;
+        });
+    },
+
+    isAdminUser: function isAdminUser(options) {
+        return this.getAdminUser(options)
+            .then(function (owner) {
+                return owner.get('status') !== 'inactive' && owner.id === options.context?.user;
+            });
     },
 
     /**

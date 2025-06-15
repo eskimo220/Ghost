@@ -68,7 +68,7 @@ const SocialGroup = ghostBookshelf.Model.extend({
             throw new errors.NotFoundError({message: `User of creator with ID ${userId} not found.`});
         }        
     },
-    
+
     enforcedFilters: function enforcedFilters(options) {
         if (options.context && options.context.internal) {
             return null;
@@ -118,6 +118,25 @@ const SocialGroup = ghostBookshelf.Model.extend({
         return filter;
     }
 },{
+    getGroupsCount: async function getGroupsCount(options) {
+        const knex = ghostBookshelf.knex('social_groups');
+        const allCounts = await knex.count('social_groups.id as count')
+            .select('social_groups.type')
+            .from('social_groups')
+            .groupBy('social_groups.type');
+
+        const counts = await knex.count('social_groups.id as count')
+            .select('social_groups.type')
+            .from('social_groups')
+            .join('social_group_members', 'social_group_members.group_id', 'social_groups.id')
+            .whereRaw('social_group_members.user_id = ?', options.context.user)
+            .andWhereRaw('social_groups.status = ?', 'active')
+            .andWhereRaw('social_group_members.status = ?', 'active')
+            .groupBy('social_groups.type');
+        
+        return {admin_groups: allCounts, user_groups: counts};
+    },
+
     countRelations() {
         return {
             members(modelOrCollection) {

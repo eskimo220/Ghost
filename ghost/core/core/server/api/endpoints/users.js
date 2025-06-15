@@ -15,7 +15,7 @@ const ALLOWED_INCLUDES = [
     'roles.permissions', 
     'count.followed', 
     'count.follow', 
-    'count.groups', 
+    'count.groups',
     'count.inactive_groups', 
     'group_members', 
     'group_members.role', 
@@ -149,7 +149,6 @@ const controller = {
                             message: tpl(messages.userNotFound)
                         }));
                     }
-
                     return model;
                 });
         }
