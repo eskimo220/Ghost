@@ -657,8 +657,39 @@ Post = ghostBookshelf.Model.extend({
         }
     },
 
+    validateGroupPost: async function validateGroupPost(model, attrs, options) {
+        const userId = options.context?.user;
+
+        if (!userId) {
+            throw new errors.NoPermissionError({message: 'User not authenticated'});
+        }
+
+        // not a group post
+        const groupId = model.get('group_id');
+        if (!groupId) {
+            return; 
+        }
+
+        // @ts-ignore
+        const group = await models.SocialGroup.findOne({id: groupId});
+        if (!group) {
+            throw new errors.NotFoundError({message: `Group not found: ${groupId}`});
+        }
+
+        const mode = model.get('id') ? 'write' : 'write'; // Same for both insert & update
+        // @ts-ignore
+        const allowed = await models.SocialGroup.canAccessGroup(group, userId, mode);
+
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: `You do not have permission to post in group ${group.get('id')} ${group.get('status')}`
+            });
+        }
+    },
+
     onSaving: async function onSaving(model, attrs, options) {
-        await this.validateGroupAndMember(model, attrs, options);
+        //await this.validateGroupAndMember(model, attrs, options);
+        await this.validateGroupPost(model, attrs, options);
 
         options = options || {};
 

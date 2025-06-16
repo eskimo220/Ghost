@@ -1,9 +1,13 @@
+// @ts-ignore
 const _ = require('lodash');
 // @ts-nocheck
 const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
+//const tpl = require('@tryghost/tpl');
+
+// @ts-ignore
 const logging = require('@tryghost/logging');
 
 const allStates = ['active', 'archived', 'approval'];
@@ -66,7 +70,16 @@ const SocialGroup = ghostBookshelf.Model.extend({
         const user = await models.User.findOne({id: userId});
         if (!user) {
             throw new errors.NotFoundError({message: `User of creator with ID ${userId} not found.`});
-        }        
+        } 
+        
+        // No permission to update for archived group 
+        if (model.get('id')) {
+            // @ts-ignore
+            const group = await models.SocialGroup.findOne({id: model.get('id')});
+            if (group && group.status === 'archived'){
+                throw new errors.NoPermissionError({message: `No permission for update archived group: ${group.id} not found.`});
+            }
+        }
     },
 
     enforcedFilters: function enforcedFilters(options) {
@@ -130,11 +143,68 @@ const SocialGroup = ghostBookshelf.Model.extend({
             .from('social_groups')
             .join('social_group_members', 'social_group_members.group_id', 'social_groups.id')
             .whereRaw('social_group_members.user_id = ?', options.context.user)
-            .andWhereRaw('social_groups.status = ?', 'active')
-            .andWhereRaw('social_group_members.status = ?', 'active')
+            //.andWhereRaw('social_groups.status = ?', 'active')
+            .andWhereRaw('social_group_members.status <> ?', 'disabled')
             .groupBy('social_groups.type');
         
         return {admin_groups: allCounts, user_groups: counts};
+    },
+
+    canAccessGroup: async function canAccessGroup(groupModel, userId, mode = 'read') {
+        if (!groupModel || !userId) {
+            return false;
+        }
+
+        // 'active', 'archived', etc.
+        const groupStatus = groupModel.get('status'); 
+
+        // Check admin
+        // @ts-ignore
+        const user = await models.User.findOne({id: userId}, {withRelated: ['roles']});
+        const isAdmin = user?.related('roles').some(role => role.get('name') === 'Administrator' || role.get('name') === 'Owner');
+        
+        logging.info('1. isAdmin', isAdmin);
+
+        if (isAdmin) {
+            // Admins can't write to archived groups
+            if (groupStatus === 'archived' && mode === 'write') {
+                logging.info('2. group status', groupStatus);
+                return false; 
+            }
+            return true;
+        }
+
+        // Check if the user is a group member
+        // @ts-ignore
+        const member = await models.SocialGroupMember.findOne({
+            group_id: groupModel.id,
+            user_id: userId
+        });
+
+        // not a member
+        if (!member) {
+            logging.info('3. is not member');
+            return false; 
+        }
+
+        // 'active', 'archived', 'disabled', etc.
+        const memberStatus = member.get('status'); 
+
+        // Disabled members get no access
+        if (memberStatus === 'disabled') {
+            logging.info('4. member status', memberStatus);
+            return false;
+        }
+
+        // All valid members (active or archived) can read
+        if (mode === 'read') {
+            logging.info('5. mode', 'read', true);
+            return true;
+        }
+
+        logging.info('6. status', groupStatus === 'active' && memberStatus === 'active');
+        // Members can write only if group is active and member is active
+        return groupStatus === 'active' && memberStatus === 'active';
     },
 
     countRelations() {
