@@ -1165,10 +1165,10 @@ module.exports = {
         type: {type: 'string', maxlength: 60, nullable: false, default: 'family', index: true, 
             validations: {
                 isIn: [[
+                    'public',
                     'family',
                     'company',
                     'private',
-                    'public',
                     'secret'
                 ]]
             }}, /// e.g., public, private, secret, family, company
@@ -1194,7 +1194,7 @@ module.exports = {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
         group_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'social_groups.id', cascadeDelete: true},
         user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
-        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true, validations: {isIn: [['active', 'archived', 'disabled']]}},
+        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true, validations: {isIn: [['active', 'disabled']]}},
         role_id: {type: 'string', maxlength: 24, nullable: false, index: true, references: 'roles.id', cascadeDelete: true},
         created_at: {type: 'dateTime', nullable: false},
         created_by: {type: 'string', maxlength: 24, nullable: false},    
