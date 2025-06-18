@@ -621,43 +621,7 @@ Post = ghostBookshelf.Model.extend({
         });
     },
 
-    /**
-     * Validate group and member if group id specified for post
-     */
-    // @ts-ignore
-    validateGroupAndMember: async function validateGroupAndMember(model, attr, options) {
-        const groupId = model.get('group_id');
-        if (groupId) {
-            // @ts-ignore
-            const group = await models.SocialGroup.findOne({id: groupId});
-            if (!group) {
-                throw new errors.NotFoundError({message: `Group with ID ${groupId} not found.`});
-            }
-            if (group.get('status') !== 'active'){
-                throw new errors.ValidationError({message: `Group with ID ${groupId} is not active.`});
-            }
-
-            //if is administrator
-            if (options.context.user) {
-                // @ts-ignore
-                const user = await models.User.findOne({id: options.context.user}, {withRelated: ['roles']});
-                if (user.toJSON().roles.some(role => role.name === 'Administrator' || role.name === 'Owner')) {
-                    return; // no need to check member if user is admin
-                }
-            }
-            
-            // @ts-ignore
-            const member = await models.SocialGroupMember.findOne({group_id: groupId, user_id: options.context.user});
-            if (!member) {
-                throw new errors.NotFoundError({message: `Group user with ID ${options.context.user} not found.`});
-            }
-            if (member.get('status') !== 'active'){
-                throw new errors.ValidationError({message: `Group user with ID ${options.context.user} is not active.`});
-            }
-        }
-    },
-
-    validateGroupPost: async function validateGroupPost(model, attrs, options) {
+    validateGroupPostOnSaving: async function validateGroupPost(model, attrs, options) {
         const userId = options.context?.user;
 
         if (!userId) {
@@ -689,7 +653,7 @@ Post = ghostBookshelf.Model.extend({
 
     onSaving: async function onSaving(model, attrs, options) {
         //await this.validateGroupAndMember(model, attrs, options);
-        await this.validateGroupPost(model, attrs, options);
+        await this.validateGroupPostOnSaving(model, attrs, options);
 
         options = options || {};
 
@@ -1289,7 +1253,6 @@ Post = ghostBookshelf.Model.extend({
         if (!/\bgroup_id:/.test(filter)) {            
             filter = filter ? `${filter}+(group_id:null)` : '(group_id:null)';
         }
-           
         return filter;
     },
 
@@ -1325,6 +1288,7 @@ Post = ghostBookshelf.Model.extend({
         return filter;
     }
 }, {
+
     getBulkActionExtraContext: function (options) {
         if (options && options.filter && options.filter.includes('type:page')) {
             return {
@@ -1396,6 +1360,28 @@ Post = ghostBookshelf.Model.extend({
         }
 
         return options;
+    },
+
+    validateGroupPostOnFetch: function validateGroupPostOnFetch(options) {
+        // Matches group_id:'684fe613ac7a254f8909f8d4' or group_id:684fe613ac7a254f8909f8d4
+        let filter = options.filter;
+        const match = filter?.match(/group_id:'?([a-f0-9]+)'?/);
+        if (match) {
+            const groupId = match[1];
+            // @ts-ignore
+            return models.SocialGroup.findOne({id: groupId})
+                .then((group) => {
+                // @ts-ignore
+                    return models.SocialGroup.canAccessGroup(group, options.context?.user, 'read')
+                        .then((allowed) => {
+                            if (!allowed) {
+                                throw new errors.NoPermissionError({
+                                    message: 'You are not allowed to read posts in this group.'
+                                });
+                            }
+                        });
+                });
+        }
     },
 
     /**

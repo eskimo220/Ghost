@@ -40,11 +40,17 @@ class PostsService {
      * @returns {Promise<Object>}
      */
     async browsePosts(options) {
+        //validate group read permission
+        await this.models.Post.validateGroupPostOnFetch(options);
+
         const posts = await this.models.Post.findPage(options);
         return posts;
     }
 
     async readPost(frame) {
+        //validate group read permission
+        await this.models.Post.validateGroupPostOnFetch(frame.options);
+
         const model = await this.models.Post.findOne(frame.data, frame.options);
 
         if (!model) {

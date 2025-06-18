@@ -5,8 +5,6 @@ const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
-//const tpl = require('@tryghost/tpl');
-
 // @ts-ignore
 const logging = require('@tryghost/logging');
 
@@ -163,12 +161,10 @@ const SocialGroup = ghostBookshelf.Model.extend({
         const user = await models.User.findOne({id: userId}, {withRelated: ['roles']});
         const isAdmin = user?.related('roles').some(role => role.get('name') === 'Administrator' || role.get('name') === 'Owner');
         
-        logging.info('1. isAdmin', isAdmin);
-
         if (isAdmin) {
             // Admins can't write to archived groups
             if (groupStatus === 'archived' && mode === 'write') {
-                logging.info('2. group status', groupStatus);
+                logging.warn(`Administrator can not write post in archived group ${groupModel.get('id')}`);
                 return false; 
             }
             return true;
@@ -183,7 +179,7 @@ const SocialGroup = ghostBookshelf.Model.extend({
 
         // not a member
         if (!member) {
-            logging.info('3. is not member');
+            logging.warn(`You are not a member of group ${groupModel.get('id')}, ${userId}`);
             return false; 
         }
 
@@ -192,17 +188,15 @@ const SocialGroup = ghostBookshelf.Model.extend({
 
         // Disabled members get no access
         if (memberStatus === 'disabled') {
-            logging.info('4. member status', memberStatus);
+            logging.warn(`You are disabled member of group ${groupModel.get('id')}, ${userId}`);
             return false;
         }
 
         // All valid members (active or archived) can read
         if (mode === 'read') {
-            logging.info('5. mode', 'read', true);
             return true;
         }
 
-        logging.info('6. status', groupStatus === 'active' && memberStatus === 'active');
         // Members can write only if group is active and member is active
         return groupStatus === 'active' && memberStatus === 'active';
     },
