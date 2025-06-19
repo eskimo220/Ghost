@@ -93,7 +93,8 @@ module.exports = {
         canonical_url: {type: 'text', maxlength: 2000, nullable: true},
         newsletter_id: {type: 'string', maxlength: 24, nullable: true, references: 'newsletters.id'},
         show_title_and_feature_image: {type: 'boolean', nullable: false, defaultTo: true},
-        group_id: {type: 'string', maxlength: 24, nullable: true, references: 'social_groups.id', cascadeDelete: true},
+        /*group_id: {type: 'string', maxlength: 24, nullable: true, references: 'social_groups.id', cascadeDelete: true},*/
+        group_id: {type: 'string', maxlength: 24, nullable: true},
         '@@INDEXES@@': [
             ['type','status','updated_at'],
             ['group_id','status','updated_at']
@@ -1164,10 +1165,10 @@ module.exports = {
         type: {type: 'string', maxlength: 60, nullable: false, default: 'family', index: true, 
             validations: {
                 isIn: [[
+                    'public',
                     'family',
                     'company',
                     'private',
-                    'public',
                     'secret'
                 ]]
             }}, /// e.g., public, private, secret, family, company
@@ -1193,7 +1194,7 @@ module.exports = {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
         group_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'social_groups.id', cascadeDelete: true},
         user_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'users.id', cascadeDelete: true},
-        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true, validations: {isIn: [['active', 'archived', 'disabled']]}},
+        status: {type: 'string', maxlength: 60, nullable: false, default: 'active', index: true, validations: {isIn: [['active', 'disabled']]}},
         role_id: {type: 'string', maxlength: 24, nullable: false, index: true, references: 'roles.id', cascadeDelete: true},
         created_at: {type: 'dateTime', nullable: false},
         created_by: {type: 'string', maxlength: 24, nullable: false},    
@@ -1207,8 +1208,8 @@ module.exports = {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
         post_id: {type: 'string', maxlength: 24, nullable: false, unique: false, index: true, references: 'posts.id', cascadeDelete: true},
         user_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'users.id', setNullDelete: true},
-        parent_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_comments.id', cascadeDelete: true},
-        in_reply_to_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_comments.id', setNullDelete: true},
+        parent_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_post_comments.id', cascadeDelete: true},
+        in_reply_to_id: {type: 'string', maxlength: 24, nullable: true, unique: false, references: 'social_post_comments.id', setNullDelete: true},
         status: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'published', validations: {isIn: [['published', 'hidden', 'deleted']]}},
         html: {type: 'text', maxlength: 1000000000, fieldtype: 'long', nullable: true},
         edited_at: {type: 'dateTime', nullable: true},

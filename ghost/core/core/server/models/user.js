@@ -456,6 +456,23 @@ User = ghostBookshelf.Model.extend({
                         .whereRaw('social_follows.user_id = users.id')
                         .as('count__follow');
                 });
+            },
+            groups(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.user_id = users.id')
+                        .andWhere('social_group_members.status', 'active')
+                        .as('count__groups');
+                });
+            },
+            inactive_groups(modelOrCollection, options) {
+                modelOrCollection.query('columns', 'users.*', (qb) => {
+                    qb.count('social_group_members.id')
+                        .from('social_group_members')
+                        .whereRaw('social_group_members.user_id = users.id and social_group_members.status <> ?', 'active')
+                        .as('count__inactive_groups');
+                });
             }
         };
     },
@@ -798,10 +815,41 @@ User = ghostBookshelf.Model.extend({
         });
     },
 
+    isOwnerUser: function isOwnerUser(options) {
+        return this.getOwnerUser(options)
+            .then(function (owner) {
+                return owner.get('status') !== 'inactive' && owner.id === options.context?.user;
+            });
+    },
+
+    getAdminUser: function getAdminUser(options) {
+        options = options || {};
+
+        return this.findOne({
+            role: 'Administrator',
+            status: 'all'
+        }, options).then(function (owner) {
+            if (!owner) {
+                return Promise.reject(new errors.NotFoundError({
+                    message: tpl(messages.ownerNotFound)
+                }));
+            }
+
+            return owner;
+        });
+    },
+
+    isAdminUser: function isAdminUser(options) {
+        return this.getAdminUser(options)
+            .then(function (owner) {
+                return owner.get('status') !== 'inactive' && owner.id === options.context?.user;
+            });
+    },
+
     /**
      * Checks if a user has permission to perform an action on another user
      * 
-     * @param {Object|string|number} userModelOrId - The user model or ID being acted upon
+     * @param {Object|string|number} userModelOrId - The user model or ID being acted upon 
      * @param {'edit'|'destroy'} action - The action being performed:
      *                                     - 'edit': Edit user details, status, or role
      *                                     - 'destroy': Delete a user (Owner cannot be deleted)

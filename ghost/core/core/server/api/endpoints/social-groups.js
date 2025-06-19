@@ -1,13 +1,28 @@
 // @ts-ignore
+// @ts-ignore
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
+// @ts-ignore
 const logging = require('@tryghost/logging');
-const ALLOWED_INCLUDES = ['posts', 'posts.authors', 'posts.tags', 'owner', 'members', 'members.user', 'members.role'];
+
+const ALLOWED_INCLUDES = [
+    'posts',
+    'posts.authors',
+    'posts.tags',
+    'owner',
+    'members',
+    'members.user',
+    'members.role',
+    'count.members',
+    'count.posts',
+    'count.inactive_members'
+];
 
 const messages = {
     notFound: 'group not found.',
-    duplicateEntry: 'group already exists.'
+    duplicateEntry: 'group already exists.',
+    notPermissionToReadGroup: 'You do not have permission to perform this action: { group }, { user }.'
 };
 
 /** @type {import('@tryghost/api-framework').Controller} */
@@ -35,31 +50,49 @@ const controller = {
             }
         },
         permissions: true,
-        query(frame) {  
-            logging.info('group frame: ', JSON.stringify(frame));
+        async query(frame) {  
             // @ts-ignore
-            return models.SocialGroup.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
+            const allGroups = await models.SocialGroup.findPage({...frame.options, withRelated: ALLOWED_INCLUDES});
+            //logging.info('allGroups', JSON.stringify(allGroups));
+            const userId = frame.options.context?.user;            
+            const allowedGroups = [];            
+            for (const group of allGroups.data) {
+                // @ts-ignore
+                const canRead = await models.SocialGroup.canAccessGroup(group, userId, 'read');
+                if (canRead) {
+                    allowedGroups.push(group);
+                }
+            }            
+            allGroups.data = allowedGroups;
+            return allGroups;        
         }
-
     },
     
     read: {
         headers: {cacheInvalidate: false},
-        options: ['include'],
+        options: [
+            'filter',
+            'include'
+        ],
         data: ['id'],
         permissions: true,
-        query(frame) {
-            logging.info('frame', JSON.stringify(frame));
+        async query(frame) {
             // @ts-ignore
-            return models.SocialGroup.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES})
-                .then((entry) => {
-                    if (!entry) {
-                        return Promise.reject(new errors.NotFoundError({
-                            message: tpl(messages.notFound)
-                        }));
-                    }
-                    return entry;
-                });
+            const entry = await models.SocialGroup.findOne(frame.data, {...frame.options, withRelated: ALLOWED_INCLUDES});
+            if (!entry) {
+                return Promise.reject(new errors.NotFoundError({
+                    message: tpl(messages.notFound)
+                }));
+            }
+            const userId = frame.options.context?.user;
+            // @ts-ignore
+            const canRead = await models.SocialGroup.canAccessGroup(entry, userId, 'read');
+            if (!canRead) {
+                return Promise.reject(new errors.NoPermissionError({
+                    message: tpl(messages.notPermissionToReadGroup, {group: entry.id, user: userId})
+                }));
+            }
+            return entry;                
         }
     },
 
@@ -67,7 +100,12 @@ const controller = {
         statusCode: 201,
         headers: {cacheInvalidate: false},
         options: ['include'],
-        data: ['creator_id', 'group_name', 'type', 'status'],
+        data: [
+            'creator_id', 
+            'group_name', 
+            'type', 
+            'status'
+        ],
         permissions: true,
         async query(frame) {
             try {
@@ -89,11 +127,17 @@ const controller = {
         statusCode: 200,
         headers: {cacheInvalidate: false},
         options: [
+            'filter',
             'include',
             'id',
             'transacting'
         ],
-        data: ['creator_id', 'group_name', 'type', 'status'],
+        data: [
+            'creator_id', 
+            'group_name', 
+            'type', 
+            'status'
+        ],
         permissions: true,
         async query(frame) {
             try {
@@ -119,6 +163,18 @@ const controller = {
         query(frame) {
             // @ts-ignore
             return models.SocialGroup.destroy({...frame.options, require: true});
+        }
+    },
+
+    count: {
+        headers: {
+            cacheInvalidate: false
+        },
+        options: ['filter'],
+        permissions: true, // or define a custom permissions handler
+        async query(frame) {
+            // @ts-ignore
+            return models.SocialGroup.getGroupsCount(frame.options);
         }
     }
 };

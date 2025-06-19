@@ -2,10 +2,14 @@
 const _ = require('lodash');
 const crypto = require('crypto');
 const moment = require('moment');
+// @ts-ignore
 const {sequence} = require('@tryghost/promise');
+// @ts-ignore
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
+// @ts-ignore
 const nql = require('@tryghost/nql');
+// @ts-ignore
 const htmlToPlaintext = require('@tryghost/html-to-plaintext');
 const ghostBookshelf = require('./base');
 const config = require('../../shared/config');
@@ -19,6 +23,7 @@ const {Tag} = require('./tag');
 const {Newsletter} = require('./newsletter');
 const {BadRequestError} = require('@tryghost/errors');
 const {PostRevisions} = require('@tryghost/post-revisions');
+// @ts-ignore
 const {mobiledocToLexical} = require('@tryghost/kg-converters');
 const labs = require('../../shared/labs');
 const {setIsRoles} = require('./role-utils');
@@ -219,6 +224,7 @@ Post = ghostBookshelf.Model.extend({
             }
 
             if (attrs[attrToTransform]) {
+                // @ts-ignore
                 attrs[attrToTransform] = urlUtils[method](attrs[attrToTransform], transformOptions);
             }
         });
@@ -246,6 +252,7 @@ Post = ghostBookshelf.Model.extend({
      * has no access to the nested relations, which should be updated.
      */
     permittedAttributes: function permittedAttributes() {
+        // @ts-ignore
         let filteredKeys = ghostBookshelf.Model.prototype.permittedAttributes.apply(this, arguments);
 
         this.relationships.forEach((key) => {
@@ -256,9 +263,11 @@ Post = ghostBookshelf.Model.extend({
     },
 
     orderAttributes: function orderAttributes() {
+        // @ts-ignore
         let keys = ghostBookshelf.Model.prototype.orderAttributes.apply(this, arguments);
 
         // extend ordered keys with post_meta keys
+        // @ts-ignore
         let postsMetaKeys = _.without(ghostBookshelf.model('PostsMeta').prototype.orderAttributes(), 'posts_meta.id', 'posts_meta.post_id');
 
         return [...keys, ...postsMetaKeys];
@@ -292,6 +301,7 @@ Post = ghostBookshelf.Model.extend({
     },
 
     filterExpansions: function filterExpansions() {
+        // @ts-ignore
         const postsMetaKeys = _.without(ghostBookshelf.model('PostsMeta').prototype.orderAttributes(), 'posts_meta.id', 'posts_meta.post_id');
 
         const expansions = [{
@@ -366,9 +376,11 @@ Post = ghostBookshelf.Model.extend({
 
         eventToTrigger = resourceType + '.' + event;
 
+        // @ts-ignore
         ghostBookshelf.Model.prototype.emitChange.bind(this)(this, eventToTrigger, options);
     },
 
+    // @ts-ignore
     onFetched: async function onFetched(model, response, options) {
         if (!labs.isSet('collectionsCard')) {
             return;
@@ -377,6 +389,7 @@ Post = ghostBookshelf.Model.extend({
         await this.renderIfNeeded(model, options);
     },
 
+    // @ts-ignore
     onFetchedCollection: async function onFetched(collection, response, options) {
         if (!labs.isSet('collectionsCard')) {
             return;
@@ -425,6 +438,7 @@ Post = ghostBookshelf.Model.extend({
      * We ensure that we are catching the event after bookshelf relations.
      */
     onSaved: function onSaved(model, options) {
+        // @ts-ignore
         ghostBookshelf.Model.prototype.onSaved.apply(this, arguments);
 
         if (options.method !== 'insert') {
@@ -441,6 +455,7 @@ Post = ghostBookshelf.Model.extend({
     },
 
     onUpdated: function onUpdated(model, options) {
+        // @ts-ignore
         ghostBookshelf.Model.prototype.onUpdated.apply(this, arguments);
 
         model.statusChanging = model.get('status') !== model.previous('status');
@@ -513,6 +528,7 @@ Post = ghostBookshelf.Model.extend({
     },
 
     onDestroyed: async function onDestroyed(model, options) {
+        // @ts-ignore
         ghostBookshelf.Model.prototype.onDestroyed.apply(this, arguments);
 
         if (labs.isSet('collectionsCard') && model.previous('type') === 'post' && model.previous('status') === 'published') {
@@ -539,6 +555,7 @@ Post = ghostBookshelf.Model.extend({
     },
 
     onDestroying: function onDestroyed(model) {
+        // @ts-ignore
         ghostBookshelf.Model.prototype.onDestroying.apply(this, arguments);
 
         this.handleAttachedModels(model);
@@ -551,14 +568,18 @@ Post = ghostBookshelf.Model.extend({
          * For the reason above, `detached` handler is using the scope of `detaching`
          * to access the models that are not present in `detached`.
          */
+        // @ts-ignore
         model.related('tags').once('detaching', function detachingTags(collection, tag) {
+            // @ts-ignore
             model.related('tags').once('detached', function detachedTags(detachedCollection, response, options) {
                 tag.emitChange('detached', options);
                 model.emitChange('tag.detached', options);
             });
         });
 
+        // @ts-ignore
         model.related('tags').once('attaching', function tagsAttaching(collection, tags) {
+            // @ts-ignore
             model.related('tags').once('attached', function tagsAttached(detachedCollection, response, options) {
                 tags.forEach((tag) => {
                     tag.emitChange('attached', options);
@@ -567,13 +588,17 @@ Post = ghostBookshelf.Model.extend({
             });
         });
 
+        // @ts-ignore
         model.related('authors').once('detaching', function authorsDetaching(collection, author) {
+            // @ts-ignore
             model.related('authors').once('detached', function authorsDetached(detachedCollection, response, options) {
                 author.emitChange('detached', options);
             });
         });
 
+        // @ts-ignore
         model.related('authors').once('attaching', function authorsAttaching(collection, authors) {
+            // @ts-ignore
             model.related('authors').once('attached', function authorsAttached(detachedCollection, response, options) {
                 authors.forEach(author => author.emitChange('attached', options));
             });
@@ -596,36 +621,39 @@ Post = ghostBookshelf.Model.extend({
         });
     },
 
-    /**
-     * Validate group and member if group id specified for post
-     */
-    validateGroupAndMember: async function validateGroupAndMember(model, attr, options) {
-        const groupId = model.get('group_id');
-        if (groupId) {
-            // @ts-ignore
-            const group = await models.SocialGroup.findOne({id: groupId});
-            if (!group) {
-                throw new errors.NotFoundError({message: `Group with ID ${groupId} not found.`});
-            }
-            if (group.get('status') !== 'active'){
-                throw new errors.ValidationError({message: `Group with ID ${groupId} is not active.`});
-            }
+    validateGroupPostOnSaving: async function validateGroupPost(model, attrs, options) {
+        const userId = options.context?.user;
 
-            //TODO administrator
-            
-            // @ts-ignore
-            const member = await models.SocialGroupMember.findOne({group_id: groupId, user_id: options.context.user});
-            if (!member) {
-                throw new errors.NotFoundError({message: `Group user with ID ${options.context.user} not found.`});
-            }
-            if (member.get('status') !== 'active'){
-                throw new errors.ValidationError({message: `Group user with ID ${options.context.user} is not active.`});
-            }
+        if (!userId) {
+            throw new errors.NoPermissionError({message: 'User not authenticated'});
+        }
+
+        // not a group post
+        const groupId = model.get('group_id');
+        if (!groupId) {
+            return; 
+        }
+
+        // @ts-ignore
+        const group = await models.SocialGroup.findOne({id: groupId});
+        if (!group) {
+            throw new errors.NotFoundError({message: `Group not found: ${groupId}`});
+        }
+
+        const mode = model.get('id') ? 'write' : 'write'; // Same for both insert & update
+        // @ts-ignore
+        const allowed = await models.SocialGroup.canAccessGroup(group, userId, mode);
+
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: `You do not have permission to post in group ${group.get('id')} ${group.get('status')}`
+            });
         }
     },
 
     onSaving: async function onSaving(model, attrs, options) {
-        await this.validateGroupAndMember(model, attrs, options);
+        //await this.validateGroupAndMember(model, attrs, options);
+        await this.validateGroupPostOnSaving(model, attrs, options);
 
         options = options || {};
 
@@ -704,6 +732,7 @@ Post = ghostBookshelf.Model.extend({
             loopTags: for (const tag of this.get('tags')) {
                 if (!tag.id && !tag.tag_id && tag.slug) {
                     // Clean up the provided slugs before we do any matching with existing tags
+                    // @ts-ignore
                     tag.slug = await ghostBookshelf.Model.generateSlug(
                         Tag,
                         tag.slug,
@@ -741,6 +770,7 @@ Post = ghostBookshelf.Model.extend({
 
         this.handleAttachedModels(model);
 
+        // @ts-ignore
         ghostBookshelf.Model.prototype.onSaving.apply(this, arguments);
 
         // do not allow generated fields to be overridden via the API
@@ -855,6 +885,7 @@ Post = ghostBookshelf.Model.extend({
             && (newStatus === 'published' || newStatus === 'scheduled' || newStatus === 'sent')) {
             // Map the passed slug to the id + validate the passed newsletter
             ops.push(async () => {
+                // @ts-ignore
                 const newsletter = await Newsletter.findOne({slug: options.newsletter}, {transacting: options.transacting, filter: 'status:active'});
                 if (!newsletter) {
                     throw new BadRequestError({
@@ -900,10 +931,12 @@ Post = ghostBookshelf.Model.extend({
         if (prevTitle !== undefined && newTitle !== prevTitle && newStatus === 'draft' && !publishedAt) {
             ops.push(function updateSlug() {
                 // Pass the new slug through the generator to strip illegal characters, detect duplicates
+                // @ts-ignore
                 return ghostBookshelf.Model.generateSlug(Post, self.get('title'),
                     {status: 'all', transacting: options.transacting, importing: options.importing})
                     .then(function then(slug) {
                         // After the new slug is found, do another generate for the old title to compare it to the old slug
+                        // @ts-ignore
                         return ghostBookshelf.Model.generateSlug(Post, prevTitle,
                             {status: 'all', transacting: options.transacting, importing: options.importing}
                         ).then(function prevTitleSlugGenerated(prevTitleSlug) {
@@ -920,6 +953,7 @@ Post = ghostBookshelf.Model.extend({
                 // If any of the attributes above were false, set initial slug and check to see if slug was changed by the user
                 if (self.hasChanged('slug') || !self.get('slug')) {
                     // Pass the new slug through the generator to strip illegal characters, detect duplicates
+                    // @ts-ignore
                     return ghostBookshelf.Model.generateSlug(Post, self.get('slug') || self.get('title'),
                         {status: 'all', transacting: options.transacting, importing: options.importing})
                         .then(function then(slug) {
@@ -935,6 +969,7 @@ Post = ghostBookshelf.Model.extend({
         if (model.hasChanged('mobiledoc') && !model.get('lexical') && !options.importing && !options.migrating) {
             ops.push(function updateRevisions() {
                 return ghostBookshelf.model('MobiledocRevision')
+                    // @ts-ignore
                     .findAll(Object.assign({
                         filter: `post_id:'${model.id}'`,
                         columns: ['id']
@@ -976,6 +1011,7 @@ Post = ghostBookshelf.Model.extend({
             });
         }
         if (!model.get('mobiledoc') && !options.importing && !options.migrating) {
+            // @ts-ignore
             const postRevisions = new PostRevisions({
                 config: {
                     max_revisions: POST_REVISIONS_COUNT,
@@ -983,12 +1019,15 @@ Post = ghostBookshelf.Model.extend({
                 }
             });
             let authorId = this.contextUser(options);
+            // @ts-ignore
             const authorExists = await ghostBookshelf.model('User').findOne({id: authorId}, {transacting: options.transacting});
             if (!authorExists) {
+                // @ts-ignore
                 authorId = await ghostBookshelf.model('User').getOwnerUser().get('id');
             }
             ops.push(async function updateRevisions() {
                 const revisionModels = await ghostBookshelf.model('PostRevision')
+                    // @ts-ignore
                     .findAll(Object.assign({
                         filter: `post_id:'${model.id}'`,
                         columns: ['id', 'lexical', 'created_at', 'author_id', 'title', 'reason', 'post_status', 'created_at_ts', 'feature_image']
@@ -1016,6 +1055,7 @@ Post = ghostBookshelf.Model.extend({
                     newStatus,
                     olderStatus
                 };
+                // @ts-ignore
                 const newRevisions = await postRevisions.getRevisions(current, revisions, revisionOptions);
                 model.set('post_revisions', newRevisions);
             });
@@ -1039,6 +1079,7 @@ Post = ghostBookshelf.Model.extend({
             })));
 
             // Don't associate the free tier with the post
+            // @ts-ignore
             const freeTier = await ghostBookshelf.model('Product').findOne({type: 'free'}, {require: false, transacting: options.transacting ?? undefined});
             if (freeTier) {
                 this.set('tiers', this.get('tiers').filter(t => t.id !== freeTier.id));
@@ -1212,7 +1253,6 @@ Post = ghostBookshelf.Model.extend({
         if (!/\bgroup_id:/.test(filter)) {            
             filter = filter ? `${filter}+(group_id:null)` : '(group_id:null)';
         }
-           
         return filter;
     },
 
@@ -1248,6 +1288,7 @@ Post = ghostBookshelf.Model.extend({
         return filter;
     }
 }, {
+
     getBulkActionExtraContext: function (options) {
         if (options && options.filter && options.filter.includes('type:page')) {
             return {
@@ -1297,6 +1338,7 @@ Post = ghostBookshelf.Model.extend({
      * @return {Array} Keys allowed in the `options` hash of the model's method.
      */
     permittedOptions: function permittedOptions(methodName) {
+        // @ts-ignore
         let options = ghostBookshelf.Model.permittedOptions.call(this, methodName);
 
         // allowlists for the `options` hash argument on methods, by method name.
@@ -1320,6 +1362,28 @@ Post = ghostBookshelf.Model.extend({
         return options;
     },
 
+    validateGroupPostOnFetch: function validateGroupPostOnFetch(options) {
+        // Matches group_id:'684fe613ac7a254f8909f8d4' or group_id:684fe613ac7a254f8909f8d4
+        let filter = options.filter;
+        const match = filter?.match(/group_id:'?([a-f0-9]+)'?/);
+        if (match) {
+            const groupId = match[1];
+            // @ts-ignore
+            return models.SocialGroup.findOne({id: groupId})
+                .then((group) => {
+                // @ts-ignore
+                    return models.SocialGroup.canAccessGroup(group, options.context?.user, 'read')
+                        .then((allowed) => {
+                            if (!allowed) {
+                                throw new errors.NoPermissionError({
+                                    message: 'You are not allowed to read posts in this group.'
+                                });
+                            }
+                        });
+                });
+        }
+    },
+
     /**
      * We have to ensure consistency. If you listen on model events (e.g. `post.published`), you can expect that you always
      * receive all fields including relations. Otherwise you can't rely on a consistent flow. And we want to avoid
@@ -1338,6 +1402,7 @@ Post = ghostBookshelf.Model.extend({
         if (!options.columns
         || (
             options.columns
+            // @ts-ignore
             && _.intersection(_.without(ghostBookshelf.model('PostsMeta').prototype.permittedAttributes(), 'id', 'post_id'), options.columns).length)
         ) {
             options.withRelated = _.union(['posts_meta', 'count.groups', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
@@ -1353,6 +1418,7 @@ Post = ghostBookshelf.Model.extend({
      * @return {Object} The filtered results of the passed in data, containing only what's allowed in the schema.
      */
     filterData: function filterData(data) {
+        // @ts-ignore
         const filteredData = ghostBookshelf.Model.filterData.apply(this, arguments);
         const extraData = _.pick(data, this.prototype.relationships);
 
@@ -1379,6 +1445,7 @@ Post = ghostBookshelf.Model.extend({
             delete data.status;
         }
 
+        // @ts-ignore
         return ghostBookshelf.Model.findOne.call(this, data, options);
     },
 
@@ -1393,6 +1460,7 @@ Post = ghostBookshelf.Model.extend({
         const editPost = () => {
             options.forUpdate = true;
 
+            // @ts-ignore
             return ghostBookshelf.Model.edit.call(this, data, options)
                 .then((post) => {
                     return this.findOne({
@@ -1429,6 +1497,7 @@ Post = ghostBookshelf.Model.extend({
 
     bulkEdit: async function bulkEdit(ids, tableName, options) {
         if (tableName === this.prototype.tableName) {
+            // @ts-ignore
             const result = await ghostBookshelf.Model.bulkEdit.call(this, ids, tableName, options);
 
             if (labs.isSet('collectionsCard')) {
@@ -1441,6 +1510,7 @@ Post = ghostBookshelf.Model.extend({
 
             return result;
         } else {
+            // @ts-ignore
             return ghostBookshelf.Model.bulkEdit.call(this, ids, tableName, options);
         }
     },
@@ -1454,6 +1524,7 @@ Post = ghostBookshelf.Model.extend({
         let options = this.filterOptions(unfilteredOptions, 'add', {extraAllowedProperties: ['id']});
 
         const addPost = (() => {
+            // @ts-ignore
             return ghostBookshelf.Model.add.call(this, data, options)
                 .then((post) => {
                     return this.findOne({
@@ -1478,6 +1549,7 @@ Post = ghostBookshelf.Model.extend({
         let options = this.filterOptions(unfilteredOptions, 'destroy', {extraAllowedProperties: ['id']});
 
         const destroyPost = () => {
+            // @ts-ignore
             return ghostBookshelf.Model.destroy.call(this, options);
         };
 
@@ -1501,6 +1573,7 @@ Post = ghostBookshelf.Model.extend({
                         .whereIn('id', ids);
                 }).count({transacting: options.transacting});
 
+                // @ts-ignore
                 const result = await ghostBookshelf.Model.bulkDestroy.call(this, ids, tableName, options);
 
                 // if we've deleted any published posts, we need to reset the html for all pages so dynamic collection
@@ -1512,14 +1585,17 @@ Post = ghostBookshelf.Model.extend({
 
                 return result;
             } else {
+                // @ts-ignore
                 return ghostBookshelf.Model.bulkDestroy.call(this, ids, tableName, options);
             }
         } else {
+            // @ts-ignore
             return ghostBookshelf.Model.bulkDestroy.call(this, ids, tableName, options);
         }
     },
 
     // NOTE: the `authors` extension is the parent of the post model. It also has a permissible function.
+    // @ts-ignore
     permissible: async function permissible(postModel, action, context, unsafeAttrs, loadedPermissions, hasUserPermission, hasApiKeyPermission) {
         let {isContributor, isOwner, isAdmin, isEitherEditor} = setIsRoles(loadedPermissions);
         let isIntegration;
@@ -1700,5 +1776,6 @@ Post = relations.authors.extendModel(Post, Posts, ghostBookshelf);
 
 module.exports = {
     Post: ghostBookshelf.model('Post', Post),
+    // @ts-ignore
     Posts: ghostBookshelf.collection('Posts', Posts)
 };

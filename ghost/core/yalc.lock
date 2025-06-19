@@ -1,0 +1,20 @@
+{
+  "version": "v1",
+  "packages": {
+    "@tryghost/admin-api-schema": {
+      "signature": "2b95d3196d958c57dc20cfaf7825a395",
+      "file": true,
+      "replaced": "4.5.5"
+    },
+    "@tryghost/kg-lexical-html-renderer": {
+      "signature": "56d7cfe5516e99d05a8d3cee3e44cadd",
+      "file": true,
+      "replaced": "1.3.5"
+    },
+    "@tryghost/kg-default-nodes": {
+      "signature": "7239f8643c3d2a0ea0ccd25edacaa562",
+      "file": true,
+      "replaced": "1.4.5"
+    }
+  }
+}

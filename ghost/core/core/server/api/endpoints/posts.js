@@ -48,12 +48,6 @@ function getCacheHeaderFromEventString(event, dto) {
     }
 }
 
-function validateGroupId(frame) {
-    if (frame.original.body.posts[0].group_id){
-        frame.data.posts[0].group_id = frame.original.body.posts[0].group_id;
-    }
-}
-
 /** @type {import('@tryghost/api-framework').Controller} */
 const controller = {
     docName: 'posts',
@@ -126,6 +120,7 @@ const controller = {
             cacheInvalidate: false
         },
         options: [
+            'filter',
             'include',
             'fields',
             'formats',
