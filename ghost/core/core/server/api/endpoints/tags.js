@@ -155,6 +155,18 @@ const controller = {
         query(frame) {
             return models.Tag.destroy({...frame.options, require: true});
         }
+    },
+
+    count: {
+        headers: {
+            cacheInvalidate: false
+        },
+        options: ['filter'],
+        permissions: true, // or define a custom permissions handler
+        async query(frame) {
+            // @ts-ignore
+            return await models.Tag.getCount(frame.options.filter);
+        }
     }
 };
 

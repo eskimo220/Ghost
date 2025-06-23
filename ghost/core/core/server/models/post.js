@@ -272,7 +272,14 @@ Post = ghostBookshelf.Model.extend({
         // @ts-ignore
         let postsMetaKeys = _.without(ghostBookshelf.model('PostsMeta').prototype.orderAttributes(), 'posts_meta.id', 'posts_meta.post_id');
 
-        return [...keys, ...postsMetaKeys];
+        // extend ordered by count of bookmarks, favors, forwards
+        let counts = [
+            'count__bookmarks',
+            'count__favors',
+            'count__forwards'
+        ];
+
+        return [...keys, ...postsMetaKeys, ...counts];
     },
 
     orderRawQuery: function orderRawQuery(field, direction, withRelated) {
@@ -1415,7 +1422,7 @@ Post = ghostBookshelf.Model.extend({
             // @ts-ignore
             && _.intersection(_.without(ghostBookshelf.model('PostsMeta').prototype.permittedAttributes(), 'id', 'post_id'), options.columns).length)
         ) {
-            options.withRelated = _.union(['posts_meta', 'count.groups', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
+            options.withRelated = _.union(['posts_meta', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
         }
 
         return options;
@@ -1672,14 +1679,6 @@ Post = ghostBookshelf.Model.extend({
 
     countRelations() {
         return {
-            groups(modelOrCollection) {
-                modelOrCollection.query('columns', 'posts.*', (qb) => {
-                    qb.count('social_groups.id')
-                        .from('social_groups')
-                        .whereRaw('posts.group_id = social_groups.id')
-                        .as('count__groups');
-                });
-            },
             bookmarks(modelOrCollection) {
                 modelOrCollection.query('columns', 'posts.*', (qb) => {
                     qb.count('social_bookmarks.id')

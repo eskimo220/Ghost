@@ -2,6 +2,7 @@ const ghostBookshelf = require('./base');
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const urlUtils = require('../../shared/url-utils');
+const logging = require('@tryghost/logging');
 
 const messages = {
     tagNotFound: 'Tag not found.'
@@ -144,6 +145,11 @@ Tag = ghostBookshelf.Model.extend({
         return ['id'];
     }
 }, {
+    getCount: async function getCount(filter = {}) {
+        const count = await ghostBookshelf.Model.count.call(this, filter);
+        return {count: count};
+    },
+
     orderDefaultOptions: function orderDefaultOptions() {
         return {};
     },

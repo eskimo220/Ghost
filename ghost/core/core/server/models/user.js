@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const validator = require('@tryghost/validator');
 const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
@@ -379,7 +380,23 @@ User = ghostBookshelf.Model.extend({
         delete options.status;
 
         return filter;
+    },
+
+    orderAttributes: function orderAttributes() {
+        // @ts-ignore
+        let attributes = ghostBookshelf.Model.prototype.orderAttributes.apply(this, arguments);
+
+        // extend ordered by count of bookmarks, favors, forwards
+        let counts = [
+            'count__posts',
+            'count__followed',
+            'count__follow',
+            'count__groups'
+        ];
+
+        return [...attributes, ...counts];
     }
+
 }, {
     orderDefaultOptions: function orderDefaultOptions() {
         return {
@@ -387,6 +404,13 @@ User = ghostBookshelf.Model.extend({
             name: 'ASC',
             created_at: 'DESC'
         };
+    },
+
+    defaultRelations: function defaultRelations(methodName, options) {
+        if (['findAll', 'findPage'].includes(methodName)) {
+            options.withRelated = _.union(['count.posts', 'count.followed', 'count.follow', 'count.groups'], options.withRelated || []);
+        }
+        return options;
     },
 
     /**

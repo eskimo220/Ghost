@@ -174,7 +174,7 @@ const controller = {
         permissions: true, // or define a custom permissions handler
         async query(frame) {
             // @ts-ignore
-            return models.SocialGroup.getGroupsCount(frame.options);
+            return await models.SocialGroup.getGroupsCount(frame.options);
         }
     }
 };

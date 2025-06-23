@@ -6,7 +6,14 @@ const postsPublicService = require('../../services/posts-public');
 const getPostServiceInstance = require('../../services/posts/posts-service');
 const postsService = getPostServiceInstance();
 
-const allowedIncludes = ['tags', 'authors', 'tiers', 'sentiment', 'count.groups', 'count.bookmarks', 'count.favors', 'count.forwards'
+const allowedIncludes = [
+    'tags',
+    'authors',
+    'tiers',
+    'sentiment',
+    'count.bookmarks',
+    'count.favors',
+    'count.forwards'
 ];
 
 const messages = {
