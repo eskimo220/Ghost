@@ -38,11 +38,10 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         // @ts-ignore
         ghostBookshelf.Model.prototype.initialize.call(this);
         this.on('saving', this.validateFields);
-        this.on('destroying', this.validateMemberPermission);
     },
 
-    async validateFields(model, attr, options) {
-        logging.info('model:', JSON.stringify(model));        
+    async validateFields(model, attrs, options) {
+        logging.info('validateFields model:', JSON.stringify(model));
         
         const userId = model.get('user_id');
         const groupId = model.get('group_id');
@@ -87,14 +86,11 @@ SocialGroupMember = ghostBookshelf.Model.extend({
             throw new errors.NotFoundError({message: `Role with ID ${roleId} not found.`});
         }
 
-        this.validateMemberPermission(model, attr, options);
+        this.validateMemberPermission(groupId, options?.context?.user);
     },
 
-    async validateMemberPermission(model, attrs, options) {
-        const actingUserId = options.context?.user?.id;
-        const groupId = model.get('group_id');
-
-        const allowed = await this.canManageGroupMembers({groupId, actingUserId});
+    async validateMemberPermission(groupId, userId) {
+        const allowed = await SocialGroupMember.canManageGroupMembers(groupId, userId);
         if (!allowed) {
             throw new errors.NoPermissionError({
                 message: 'You do not have permission to modify group members'
@@ -151,8 +147,21 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         return filter;
     }
 }, {
+
+    validateDestroyMemberPermission: async function validateDestroyMemberPermission(groupId, userId) {
+        // @ts-ignore
+        const allowed = await this.canManageGroupMembers(groupId, userId);
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: 'You do not have permission to modify group members'
+            });
+        }
+    },
+
     canManageGroupMembers: async function canManageGroupMembers(groupId, userId) {
+        logging.info('canManageGroupMembers:', groupId, userId);
         if (!groupId || !userId) {
+            logging.warn('No groupId or userId');
             return false;
         }
 
@@ -182,7 +191,11 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         });
 
         const roleName = groupMember?.related('role')?.get('name');
-        return roleName === 'Social Group Admin';
+        const allowed = roleName === 'Social Group Admin' || roleName === 'Social Group Owner';
+        if (!allowed) {
+            logging.warn('Not group admin or owner', groupId, userId);
+        }
+        return allowed;
     }
 
 });
