@@ -28,6 +28,8 @@ const {mobiledocToLexical} = require('@tryghost/kg-converters');
 const labs = require('../../shared/labs');
 const {setIsRoles} = require('./role-utils');
 const models = require('./index');
+// @ts-ignore
+const logging = require('@tryghost/logging');
 
 const messages = {
     isAlreadyPublished: 'Your post is already published, please reload your page.',
@@ -1363,6 +1365,8 @@ Post = ghostBookshelf.Model.extend({
     },
 
     validateGroupPostOnFetch: function validateGroupPostOnFetch(options) {
+        logging.info('validateGroupPostOnFetch', JSON.stringify(options));
+
         // Matches group_id:'684fe613ac7a254f8909f8d4' or group_id:684fe613ac7a254f8909f8d4
         let filter = options.filter;
         const match = filter?.match(/group_id:'?([a-f0-9]+)'?/);
@@ -1371,12 +1375,18 @@ Post = ghostBookshelf.Model.extend({
             // @ts-ignore
             return models.SocialGroup.findOne({id: groupId})
                 .then((group) => {
-                // @ts-ignore
-                    return models.SocialGroup.canAccessGroup(group, options.context?.user, 'read')
+                    const user = options.context.user;
+                    if (!user) {
+                        throw new errors.NoPermissionError({
+                            message: `No login user authentication, can not read posts in this group: ${groupId}.`
+                        });
+                    }
+                    // @ts-ignore
+                    return models.SocialGroup.canAccessGroup(group, user, 'read')
                         .then((allowed) => {
                             if (!allowed) {
                                 throw new errors.NoPermissionError({
-                                    message: 'You are not allowed to read posts in this group.'
+                                    message: `You are not allowed to read posts in this group: ${groupId}, user: ${user}.`
                                 });
                             }
                         });

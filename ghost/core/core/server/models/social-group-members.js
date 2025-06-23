@@ -1,8 +1,10 @@
+// @ts-ignore
 const _ = require('lodash');
 const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
+// @ts-ignore
 const logging = require('@tryghost/logging');
 
 const allStates = ['active', 'archived', 'disabled'];
@@ -36,9 +38,10 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         // @ts-ignore
         ghostBookshelf.Model.prototype.initialize.call(this);
         this.on('saving', this.validateFields);
+        this.on('destroying', this.validateMemberPermission);
     },
 
-    async validateFields(model) {
+    async validateFields(model, attr, options) {
         logging.info('model:', JSON.stringify(model));        
         
         const userId = model.get('user_id');
@@ -83,6 +86,20 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         if (!role) {
             throw new errors.NotFoundError({message: `Role with ID ${roleId} not found.`});
         }
+
+        this.validateMemberPermission(model, attr, options);
+    },
+
+    async validateMemberPermission(model, attrs, options) {
+        const actingUserId = options.context?.user?.id;
+        const groupId = model.get('group_id');
+
+        const allowed = await this.canManageGroupMembers({groupId, actingUserId});
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: 'You do not have permission to modify group members'
+            });
+        }
     },
     
     enforcedFilters: function enforcedFilters(options) {
@@ -106,9 +123,9 @@ SocialGroupMember = ghostBookshelf.Model.extend({
     },
     
     /**
-         * You can pass an extra `status=VALUES` field.
-         * Long-Term: We should deprecate these short cuts and force users to use the filter param.
-         */
+     * You can pass an extra `status=VALUES` field.
+     * Long-Term: We should deprecate these short cuts and force users to use the filter param.
+     */
     extraFilters: function extraFilters(options) {
         if (!options.status) {
             return null;
@@ -133,6 +150,41 @@ SocialGroupMember = ghostBookshelf.Model.extend({
     
         return filter;
     }
+}, {
+    canManageGroupMembers: async function canManageGroupMembers(groupId, userId) {
+        if (!groupId || !userId) {
+            return false;
+        }
+
+        // 1. Check if the user is a global Administrator or Owner
+        // @ts-ignore
+        const user = await models.User.findOne({id: userId}, {withRelated: ['roles']});
+        const isAdminOrOwner = user?.related('roles').some(role => role.get('name') === 'Administrator' || role.get('name') === 'Owner');        
+        if (isAdminOrOwner) {
+            return true;
+        }
+
+        // 2. Check if the user is the creator (owner) of the group
+        // @ts-ignore
+        const group = await models.SocialGroup.findOne({id: groupId});
+        if (group?.get('creator_id') === userId) {
+            return true;
+        }
+
+        // 3. Check if the user is a group admin in that group
+        // @ts-ignore
+        const groupMember = await models.SocialGroupMember.findOne({
+            group_id: groupId,
+            user_id: userId,
+            status: 'active'
+        }, {
+            withRelated: ['role'] 
+        });
+
+        const roleName = groupMember?.related('role')?.get('name');
+        return roleName === 'Social Group Admin';
+    }
+
 });
 
 SocialGroupMembers = ghostBookshelf.Collection.extend({
