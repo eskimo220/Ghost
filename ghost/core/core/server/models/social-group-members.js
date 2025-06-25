@@ -86,7 +86,9 @@ SocialGroupMember = ghostBookshelf.Model.extend({
             throw new errors.NotFoundError({message: `Role with ID ${roleId} not found.`});
         }
 
-        this.validateMemberPermission(groupId, options?.context?.user);
+        if (model.get('id')) {
+            this.validateMemberPermission(groupId, userId);
+        }
     },
 
     async validateMemberPermission(groupId, userId) {

@@ -1,10 +1,12 @@
 // @ts-ignore
+// @ts-ignore
 const _ = require('lodash');
 // @ts-nocheck
 const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
+// @ts-ignore
 // @ts-ignore
 const logging = require('@tryghost/logging');
 
@@ -127,6 +129,29 @@ const SocialGroup = ghostBookshelf.Model.extend({
         delete options.status;
 
         return filter;
+    },
+
+    // @ts-ignore
+    async onCreated(model, attrs, options) {
+        logging.info(`SocialGroup.onCreated: ${model.id}, ${JSON.stringify(model.toJSON())}`);
+
+        const creatorUserId = model.get('creator_id') || options.context?.user;
+
+        // @ts-ignore
+        const groupOwnerRole = await models.Role.findOne({name: 'Social Group Owner'}, {transacting: options.transacting});
+
+        // Create owner member
+        const ownerMember = {
+            group_id: model.id,
+            user_id: creatorUserId,
+            status: 'active',
+            role_id: groupOwnerRole.get('id')
+        };
+
+        // @ts-ignore
+        await ghostBookshelf.model('SocialGroupMember').add(ownerMember, {
+            transacting: options.transacting
+        });
     }
 },{
     getGroupsCount: async function getGroupsCount(options) {
