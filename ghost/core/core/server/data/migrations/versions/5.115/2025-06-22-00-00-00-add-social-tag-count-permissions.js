@@ -5,5 +5,5 @@ module.exports = combineTransactionalMigrations(
         name: 'Count Tags',
         action: 'count',
         object: 'tag'
-    }, ['Administrator', 'Admin Integration'])    
+    }, ['Administrator', 'Owner', 'Admin Integration'])    
 );
