@@ -68,6 +68,9 @@ COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/202
 COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-04-01-21-01-21-add-social-post-comments-report-table.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
 COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-04-01-21-01-22-add-social-post-comments-report-permissions.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
 COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-06-15-15-00-00-add-social-groups-count-permissions.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
+COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-06-22-00-00-00-add-social-tag-count-permissions.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
+COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-06-26-00-00-00-add-social-group-trash-for-administrator.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
+COPY --chown=node:node ghost/core/core/server/data/migrations/versions/5.115/2025-06-26-01-00-00-add-social-group-column-of-image.js ${GHOST_INSTALL}/current/core/server/data/migrations/versions/5.115
 
 COPY --chown=node:node ghost/core/core/server/models/post.js ${GHOST_INSTALL}/current/core/server/models
 COPY --chown=node:node ghost/core/core/server/models/social-bookmark.js ${GHOST_INSTALL}/current/core/server/models
