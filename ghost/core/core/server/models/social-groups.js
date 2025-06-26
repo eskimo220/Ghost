@@ -6,8 +6,6 @@ const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
-// @ts-ignore
-// @ts-ignore
 const logging = require('@tryghost/logging');
 
 const allStates = ['active', 'archived', 'approval'];
@@ -131,6 +129,12 @@ const SocialGroup = ghostBookshelf.Model.extend({
         return filter;
     },
 
+    /**
+     * When add a new group, we create a group owner member with the same user as creator.
+     * @param {*} model 
+     * @param {*} attrs 
+     * @param {*} options 
+     */
     // @ts-ignore
     async onCreated(model, attrs, options) {
         logging.info(`SocialGroup.onCreated: ${model.id}, ${JSON.stringify(model.toJSON())}`);
@@ -152,7 +156,44 @@ const SocialGroup = ghostBookshelf.Model.extend({
         await ghostBookshelf.model('SocialGroupMember').add(ownerMember, {
             transacting: options.transacting
         });
+    },
+    
+    /**
+     * When deleting a group, we move all posts in this group to Trash group.
+     * And Trash group can not be deleted.
+     * @param {*} model 
+     * @param {*} attrs 
+     * @param {*} options 
+     * @returns 
+     */
+    async onDestroying(model, attrs, options) {
+        logging.info(`SocialGroup.onDestroying: ${model.id}, ${JSON.stringify(model.toJSON())}`);
+
+        if (model.get('group_name') === 'Trash') {    
+            throw new errors.NoPermissionError({message: `No permission to delete Trash group.`});
+        }
+
+        // Get trash group
+        // @ts-ignore
+        const trashGroup = await SocialGroup.findOne({group_name: 'Trash'});        
+        if (!trashGroup) {
+            logging.warn(`Trash group not found. Don't move posts in deleted group to Trash`);
+            return;
+            //throw new errors.NotFoundError({message: `Trash group not found. Don't move posts in deleted group to Trash`});
+        }
+        
+        const groupId = model.get('id');
+        const trashGroupId = trashGroup.get('id');
+
+        // Move all posts in deleted group to trash group
+        const updated = await ghostBookshelf.knex('posts')
+            .where('group_id', groupId)
+            .update('group_id', trashGroupId);
+            //.transacting(options.transacting);
+
+        logging.info(`${updated} posts moved to Trash group`);            
     }
+    
 },{
     getGroupsCount: async function getGroupsCount(options) {
         const knex = ghostBookshelf.knex('social_groups');
