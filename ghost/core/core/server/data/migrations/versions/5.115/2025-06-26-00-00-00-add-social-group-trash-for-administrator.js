@@ -18,6 +18,13 @@ module.exports = createTransactionalMigration(
             .first();
         logging.info(`Get Owner user id`, JSON.stringify(user));    
 
+        const groupRole = await knex
+            .select('id')
+            .from('roles')
+            .where('name', 'Social Group Owner')
+            .first();
+        logging.info(`Get Social Group Owner role id`, JSON.stringify(groupRole));
+
         const now = knex.raw('CURRENT_TIMESTAMP');
         const groupId = ObjectID().toHexString();
 
@@ -42,7 +49,7 @@ module.exports = createTransactionalMigration(
                 group_id: groupId,
                 user_id: user.user_id, 
                 status: 'active',
-                role_id: role.id,
+                role_id: groupRole.id,
                 created_by: user.user_id,
                 updated_at: now,
                 created_at: now
