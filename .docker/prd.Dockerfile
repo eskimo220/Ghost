@@ -1,6 +1,12 @@
 # syntax=docker.io/docker/dockerfile:1
 FROM ghost:5.116.2-alpine
 
+# Set timezone
+ENV TZ=Asia/Tokyo
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
+
 ENV GHOST_INSTALL=/var/lib/ghost
 ENV GHOST_CONTENT=/var/lib/ghost/content
 ENV GHOST_VERSION=5.116.2 
