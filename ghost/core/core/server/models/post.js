@@ -631,6 +631,11 @@ Post = ghostBookshelf.Model.extend({
     },
 
     validateGroupPostOnSaving: async function validateGroupPost(model, attrs, options) {
+        logging.info('validateGroupPostOnSaving:', JSON.stringify(options.context || {}));
+        if (options.context?.internal){
+            return;
+        }
+
         const userId = options.context?.user;
 
         if (!userId) {
@@ -661,7 +666,6 @@ Post = ghostBookshelf.Model.extend({
     },
 
     onSaving: async function onSaving(model, attrs, options) {
-        //await this.validateGroupAndMember(model, attrs, options);
         await this.validateGroupPostOnSaving(model, attrs, options);
 
         options = options || {};
