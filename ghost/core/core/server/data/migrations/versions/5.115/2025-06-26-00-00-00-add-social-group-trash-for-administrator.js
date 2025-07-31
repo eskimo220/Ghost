@@ -35,7 +35,7 @@ module.exports = createTransactionalMigration(
                 group_name: 'Trash',
                 creator_id: user.user_id, 
                 type: 'public',
-                status: 'archived',
+                status: 'active',
                 description: 'This group is used to store deleted social groups temporarily before permanent deletion.',
                 created_by: user.user_id,
                 updated_at: now,
