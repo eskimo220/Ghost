@@ -2,7 +2,6 @@ const ghostBookshelf = require('./base');
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const urlUtils = require('../../shared/url-utils');
-const logging = require('@tryghost/logging');
 
 const messages = {
     tagNotFound: 'Tag not found.'
