@@ -2,10 +2,16 @@
 FROM ghost:5.116.2-alpine
 
 # Set timezone
+# Set timezone and install build dependencies for node-gyp
 ENV TZ=Asia/Tokyo
-RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone
+RUN apk add --no-cache \
+    tzdata \
+    python3 \
+    make \
+    g++ \
+    && cp /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone \
+    && ln -sf python3 /usr/bin/python
 
 ENV GHOST_INSTALL=/var/lib/ghost
 ENV GHOST_CONTENT=/var/lib/ghost/content
@@ -127,9 +133,6 @@ COPY --chown=node:node ghost/core/core/server/web/api/endpoints/content/routes.j
 # 12. Config overrides changed
 COPY --chown=node:node ghost/core/core/shared/config/overrides.json /var/lib/ghost/current/core/shared/config/overrides.json
 
-RUN apk add --no-cache python3 make g++ \
-    && npm config set python python3
-
 # Install dependencies as node user
 RUN set -eux; \
     cd ${GHOST_INSTALL}/current && \
@@ -140,8 +143,6 @@ RUN set -eux; \
 	gosu node npm cache clean --force; \
 	npm cache clean --force; \
 	rm -rv /tmp/yarn*;
-
-RUN apk del python3 make g++
 
 WORKDIR $GHOST_INSTALL
 VOLUME $GHOST_CONTENT
