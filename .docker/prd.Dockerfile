@@ -127,6 +127,9 @@ COPY --chown=node:node ghost/core/core/server/web/api/endpoints/content/routes.j
 # 12. Config overrides changed
 COPY --chown=node:node ghost/core/core/shared/config/overrides.json /var/lib/ghost/current/core/shared/config/overrides.json
 
+RUN apk add --no-cache python3 make g++ \
+    && npm config set python python3
+
 # Install dependencies as node user
 RUN set -eux; \
     cd ${GHOST_INSTALL}/current && \
@@ -137,6 +140,8 @@ RUN set -eux; \
 	gosu node npm cache clean --force; \
 	npm cache clean --force; \
 	rm -rv /tmp/yarn*;
+
+RUN apk del python3 make g++
 
 WORKDIR $GHOST_INSTALL
 VOLUME $GHOST_CONTENT
