@@ -144,6 +144,11 @@ Tag = ghostBookshelf.Model.extend({
         return ['id'];
     }
 }, {
+    getCount: async function getCount(filter = {}) {
+        const count = await ghostBookshelf.Model.count.call(this, filter);
+        return {count: count};
+    },
+
     orderDefaultOptions: function orderDefaultOptions() {
         return {};
     },

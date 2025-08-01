@@ -1,8 +1,10 @@
 // @ts-ignore
 // @ts-ignore
+// @ts-ignore
 const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
+// @ts-ignore
 // @ts-ignore
 const logging = require('@tryghost/logging');
 
@@ -99,7 +101,10 @@ const controller = {
     add: {
         statusCode: 201,
         headers: {cacheInvalidate: false},
-        options: ['include'],
+        options: [
+            'include',
+            'transacting'
+        ],
         data: [
             'creator_id', 
             'group_name', 
@@ -130,6 +135,8 @@ const controller = {
             'filter',
             'include',
             'id',
+            // NOTE: only for internal context
+            'forUpdate',
             'transacting'
         ],
         data: [
@@ -174,7 +181,7 @@ const controller = {
         permissions: true, // or define a custom permissions handler
         async query(frame) {
             // @ts-ignore
-            return models.SocialGroup.getGroupsCount(frame.options);
+            return await models.SocialGroup.getGroupsCount(frame.options);
         }
     }
 };

@@ -28,6 +28,8 @@ const {mobiledocToLexical} = require('@tryghost/kg-converters');
 const labs = require('../../shared/labs');
 const {setIsRoles} = require('./role-utils');
 const models = require('./index');
+// @ts-ignore
+const logging = require('@tryghost/logging');
 
 const messages = {
     isAlreadyPublished: 'Your post is already published, please reload your page.',
@@ -270,7 +272,14 @@ Post = ghostBookshelf.Model.extend({
         // @ts-ignore
         let postsMetaKeys = _.without(ghostBookshelf.model('PostsMeta').prototype.orderAttributes(), 'posts_meta.id', 'posts_meta.post_id');
 
-        return [...keys, ...postsMetaKeys];
+        // extend ordered by count of bookmarks, favors, forwards
+        let counts = [
+            'count__bookmarks',
+            'count__favors',
+            'count__forwards'
+        ];
+
+        return [...keys, ...postsMetaKeys, ...counts];
     },
 
     orderRawQuery: function orderRawQuery(field, direction, withRelated) {
@@ -622,6 +631,11 @@ Post = ghostBookshelf.Model.extend({
     },
 
     validateGroupPostOnSaving: async function validateGroupPost(model, attrs, options) {
+        logging.info('validateGroupPostOnSaving:', JSON.stringify(options.context || {}));
+        if (options.context?.internal){
+            return;
+        }
+
         const userId = options.context?.user;
 
         if (!userId) {
@@ -652,7 +666,6 @@ Post = ghostBookshelf.Model.extend({
     },
 
     onSaving: async function onSaving(model, attrs, options) {
-        //await this.validateGroupAndMember(model, attrs, options);
         await this.validateGroupPostOnSaving(model, attrs, options);
 
         options = options || {};
@@ -1363,6 +1376,8 @@ Post = ghostBookshelf.Model.extend({
     },
 
     validateGroupPostOnFetch: function validateGroupPostOnFetch(options) {
+        logging.info('validateGroupPostOnFetch', JSON.stringify(options));
+
         // Matches group_id:'684fe613ac7a254f8909f8d4' or group_id:684fe613ac7a254f8909f8d4
         let filter = options.filter;
         const match = filter?.match(/group_id:'?([a-f0-9]+)'?/);
@@ -1371,12 +1386,18 @@ Post = ghostBookshelf.Model.extend({
             // @ts-ignore
             return models.SocialGroup.findOne({id: groupId})
                 .then((group) => {
-                // @ts-ignore
-                    return models.SocialGroup.canAccessGroup(group, options.context?.user, 'read')
+                    const user = options.context.user;
+                    if (!user) {
+                        throw new errors.NoPermissionError({
+                            message: `No login user authentication, can not read posts in this group: ${groupId}.`
+                        });
+                    }
+                    // @ts-ignore
+                    return models.SocialGroup.canAccessGroup(group, user, 'read')
                         .then((allowed) => {
                             if (!allowed) {
                                 throw new errors.NoPermissionError({
-                                    message: 'You are not allowed to read posts in this group.'
+                                    message: `You are not allowed to read posts in this group: ${groupId}, user: ${user}.`
                                 });
                             }
                         });
@@ -1405,7 +1426,7 @@ Post = ghostBookshelf.Model.extend({
             // @ts-ignore
             && _.intersection(_.without(ghostBookshelf.model('PostsMeta').prototype.permittedAttributes(), 'id', 'post_id'), options.columns).length)
         ) {
-            options.withRelated = _.union(['posts_meta', 'count.groups', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
+            options.withRelated = _.union(['posts_meta', 'count.bookmarks', 'count.favors', 'count.forwards'], options.withRelated || []);
         }
 
         return options;
@@ -1662,14 +1683,6 @@ Post = ghostBookshelf.Model.extend({
 
     countRelations() {
         return {
-            groups(modelOrCollection) {
-                modelOrCollection.query('columns', 'posts.*', (qb) => {
-                    qb.count('social_groups.id')
-                        .from('social_groups')
-                        .whereRaw('posts.group_id = social_groups.id')
-                        .as('count__groups');
-                });
-            },
             bookmarks(modelOrCollection) {
                 modelOrCollection.query('columns', 'posts.*', (qb) => {
                     qb.count('social_bookmarks.id')

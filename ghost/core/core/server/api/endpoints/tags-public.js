@@ -36,6 +36,7 @@ const controller = {
         },
         permissions: true,
         query(frame) {
+            // @ts-ignore            
             return models.TagPublic.findPage(frame.options);
         }
     },
@@ -75,7 +76,20 @@ const controller = {
                     return model;
                 });
         }
+    },
+
+    count: {
+        headers: {
+            cacheInvalidate: false
+        },
+        options: ['filter'],
+        permissions: true, // or define a custom permissions handler
+        async query(frame) {
+            // @ts-ignore
+            return await models.TagPublic.getCount(frame.options.filter);
+        }
     }
+    
 };
 
 module.exports = controller;

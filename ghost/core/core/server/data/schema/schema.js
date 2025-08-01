@@ -1180,7 +1180,8 @@ module.exports = {
                     'archived'
                 ]]
             }}, /// e.g., waitapproval active, archived
-        max_members: {type: 'integer', nullable: false, unsigned: true, defaultTo: 100}, // ← new    
+        max_members: {type: 'integer', nullable: false, unsigned: true, defaultTo: 100}, 
+        group_image: {type: 'string', maxlength: 2000, nullable: true},
         require_approval: {type: 'boolean', nullable: true, defaultTo: false}, // ← new
         optional_settings: {type: 'json', nullable: true, defaultTo: {}}, // ← new
         approved_at: {type: 'dateTime', nullable: true},

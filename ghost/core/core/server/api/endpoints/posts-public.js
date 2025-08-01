@@ -6,7 +6,15 @@ const postsPublicService = require('../../services/posts-public');
 const getPostServiceInstance = require('../../services/posts/posts-service');
 const postsService = getPostServiceInstance();
 
-const allowedIncludes = ['tags', 'authors', 'tiers', 'sentiment'];
+const allowedIncludes = [
+    'tags',
+    'authors',
+    'tiers',
+    'sentiment',
+    'count.bookmarks',
+    'count.favors',
+    'count.forwards'
+];
 
 const messages = {
     postNotFound: 'Post not found.'
@@ -125,6 +133,7 @@ const controller = {
         generateCacheKeyData(frame) {
             return {
                 options: generateOptionsData(frame, [
+                    'filter',
                     'include',
                     'fields',
                     'formats',
@@ -140,6 +149,7 @@ const controller = {
             };
         },
         options: [
+            'filter',
             'include',
             'fields',
             'formats',

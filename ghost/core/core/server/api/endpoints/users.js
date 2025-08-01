@@ -87,6 +87,17 @@ function shouldInvalidateCacheAfterChange(model) {
     return false;
 }
 
+function orderByCount(options) {
+    // Handle social ordering
+    if (options.order) {
+        options.order = options.order
+            .replace('posts', 'count__posts')
+            .replace('followed', 'count__followed')
+            .replace('follow', 'count__follow')
+            .replace('groups', 'count__groups');
+    }
+}
+
 /** @type {import('@tryghost/api-framework').Controller} */
 const controller = {
     docName: 'users',
@@ -113,6 +124,7 @@ const controller = {
         },
         permissions: true,
         query(frame) {
+            orderByCount(frame.options);
             return models.User.findPage(frame.options);
         }
     },

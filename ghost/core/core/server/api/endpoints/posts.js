@@ -17,7 +17,6 @@ const allowedIncludes = [
     'count.negative_feedback',
     'post_revisions',
     'post_revisions.author',
-    'count.groups',
     'count.bookmarks',
     'count.favors',
     'count.forwards'

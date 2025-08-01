@@ -1,8 +1,10 @@
+// @ts-ignore
 const _ = require('lodash');
 const ObjectId = require('bson-objectid').default;
 const ghostBookshelf = require('./base');
 const errors = require('@tryghost/errors');
 const models = require('./index');
+// @ts-ignore
 const logging = require('@tryghost/logging');
 
 const allStates = ['active', 'archived', 'disabled'];
@@ -38,8 +40,8 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         this.on('saving', this.validateFields);
     },
 
-    async validateFields(model) {
-        logging.info('model:', JSON.stringify(model));        
+    async validateFields(model, attrs, options) {
+        logging.info('validateFields model:', JSON.stringify(model));
         
         const userId = model.get('user_id');
         const groupId = model.get('group_id');
@@ -83,6 +85,19 @@ SocialGroupMember = ghostBookshelf.Model.extend({
         if (!role) {
             throw new errors.NotFoundError({message: `Role with ID ${roleId} not found.`});
         }
+
+        if (model.get('id')) {
+            this.validateMemberPermission(groupId, userId);
+        }
+    },
+
+    async validateMemberPermission(groupId, userId) {
+        const allowed = await SocialGroupMember.canManageGroupMembers(groupId, userId);
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: 'You do not have permission to modify group members'
+            });
+        }
     },
     
     enforcedFilters: function enforcedFilters(options) {
@@ -106,9 +121,9 @@ SocialGroupMember = ghostBookshelf.Model.extend({
     },
     
     /**
-         * You can pass an extra `status=VALUES` field.
-         * Long-Term: We should deprecate these short cuts and force users to use the filter param.
-         */
+     * You can pass an extra `status=VALUES` field.
+     * Long-Term: We should deprecate these short cuts and force users to use the filter param.
+     */
     extraFilters: function extraFilters(options) {
         if (!options.status) {
             return null;
@@ -133,6 +148,58 @@ SocialGroupMember = ghostBookshelf.Model.extend({
     
         return filter;
     }
+}, {
+
+    validateDestroyMemberPermission: async function validateDestroyMemberPermission(groupId, userId) {
+        // @ts-ignore
+        const allowed = await this.canManageGroupMembers(groupId, userId);
+        if (!allowed) {
+            throw new errors.NoPermissionError({
+                message: 'You do not have permission to modify group members'
+            });
+        }
+    },
+
+    canManageGroupMembers: async function canManageGroupMembers(groupId, userId) {
+        logging.info('canManageGroupMembers:', groupId, userId);
+        if (!groupId || !userId) {
+            logging.warn('No groupId or userId');
+            return false;
+        }
+
+        // 1. Check if the user is a global Administrator or Owner
+        // @ts-ignore
+        const user = await models.User.findOne({id: userId}, {withRelated: ['roles']});
+        const isAdminOrOwner = user?.related('roles').some(role => role.get('name') === 'Administrator' || role.get('name') === 'Owner');        
+        if (isAdminOrOwner) {
+            return true;
+        }
+
+        // 2. Check if the user is the creator (owner) of the group
+        // @ts-ignore
+        const group = await models.SocialGroup.findOne({id: groupId});
+        if (group?.get('creator_id') === userId) {
+            return true;
+        }
+
+        // 3. Check if the user is a group admin in that group
+        // @ts-ignore
+        const groupMember = await models.SocialGroupMember.findOne({
+            group_id: groupId,
+            user_id: userId,
+            status: 'active'
+        }, {
+            withRelated: ['role'] 
+        });
+
+        const roleName = groupMember?.related('role')?.get('name');
+        const allowed = roleName === 'Social Group Admin' || roleName === 'Social Group Owner';
+        if (!allowed) {
+            logging.warn('Not group admin or owner', groupId, userId);
+        }
+        return allowed;
+    }
+
 });
 
 SocialGroupMembers = ghostBookshelf.Collection.extend({

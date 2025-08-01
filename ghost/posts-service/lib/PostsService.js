@@ -34,6 +34,16 @@ class PostsService {
         this.postsExporter = postsExporter;
     }
 
+    orderByCount(options) {
+        // Handle social ordering
+        if (options.order) {
+            options.order = options.order
+                .replace('bookmarks', 'count__bookmarks')
+                .replace('favors', 'count__favors')
+                .replace('forwards', 'count__forwards');
+        }
+    }
+
     /**
      *
      * @param {Object} options - frame options
@@ -42,6 +52,7 @@ class PostsService {
     async browsePosts(options) {
         //validate group read permission
         await this.models.Post.validateGroupPostOnFetch(options);
+        this.orderByCount(options);
 
         const posts = await this.models.Post.findPage(options);
         return posts;

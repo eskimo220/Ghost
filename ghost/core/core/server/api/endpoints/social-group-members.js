@@ -3,7 +3,6 @@ const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
 // @ts-ignore
-//const api = require('./index');
 const logging = require('@tryghost/logging');
 const ALLOWED_INCLUDES = ['group', 'user', 'role'];
 
@@ -126,9 +125,11 @@ const controller = {
         headers: {cacheInvalidate: false},
         options: ['id'],
         permissions: true,
-        query(frame) {
+        async query(frame) {
             // @ts-ignore
-            return models.SocialGroupMember.destroy({...frame.options, require: true});
+            await models.SocialGroupMember.validateDestroyMemberPermission(frame.data.socialgroupmembers[0].group_id, frame.options.context.user);
+            // @ts-ignore
+            return await models.SocialGroupMember.destroy({...frame.options, require: true});
         }
     }
 };

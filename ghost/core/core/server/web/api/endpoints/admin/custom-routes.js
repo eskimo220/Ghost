@@ -45,5 +45,8 @@ module.exports = function customApiRoutes(router) {
     router.put('/social/members/:id', mw.authAdminApi, http(api.socialGroupMembers.edit));
     router.del('/social/members/:id', mw.authAdminApi, http(api.socialGroupMembers.destroy));
     
+    // ## Tags
+    router.get('/tags/all/count', mw.authAdminApi, http(api.tags.count));
+
     return router;
 };
